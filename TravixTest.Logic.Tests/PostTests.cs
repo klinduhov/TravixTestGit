@@ -10,8 +10,6 @@ namespace TravixTest.Logic.Tests
 {
     public class PostTests
     {
-        Mock<IPostRepository> mockCreditDecisionService;
-
         #region Facts
 
         [Fact]
@@ -56,6 +54,17 @@ namespace TravixTest.Logic.Tests
             var gotPost = service.Get(postNotAdded.Id);
 
             Assert.Null(gotPost);
+        }
+
+        [Fact]
+        public void Get_IfAddedPost_ShouldReturnTheAddedOne()
+        {
+            var service = CreateTestingService();
+            var postToBeAdded = new Post(Guid.NewGuid(), "added post body");
+            service.Add(postToBeAdded);
+            var gotPost = service.Get(postToBeAdded.Id);
+
+            Assert.Equal(postToBeAdded.Id, gotPost.Id);
         }
 
         [Fact]
@@ -122,6 +131,18 @@ namespace TravixTest.Logic.Tests
             Assert.Throws<Exception>(() => service.Update(postNotExisting));
         }
 
+        [Fact]
+        public void Update_IfUpdatedPostBody_GetPostShouldReturnTheSameBody()
+        {
+            var service = CreateTestingService();
+            var postToBeUpdated = service.GetAll().First();
+            var updatedPost = new Post(postToBeUpdated.Id, $"updated post body {Guid.NewGuid()}");
+            service.Update(updatedPost);
+            var gotPost = service.Get(updatedPost.Id);
+
+            Assert.Equal(updatedPost.Body, gotPost.Body);
+        }
+
         #endregion
 
         #region Private methods
@@ -132,10 +153,33 @@ namespace TravixTest.Logic.Tests
             postsWereCreated.AddRange(Enumerable.Range(0, 5).Select(i => new Post(Guid.NewGuid(), $"test body {i}")));
 
             var mockPostRepository = new Mock<IPostRepository>();
-            mockPostRepository.Setup(r => r.Add(It.IsAny<Post>())).Callback<Post>((p) => postsWereCreated.Add(p));
-            mockPostRepository.Setup(r => r.GetAll()).Returns(() => postsWereCreated);
-            mockPostRepository.Setup(r => r.Get(It.IsAny<Guid>()))
+
+            mockPostRepository
+                .Setup(r => r.Add(It.IsAny<Post>()))
+                .Returns(true)
+                .Callback<Post>((p) => postsWereCreated.Add(p));
+
+            mockPostRepository
+                .Setup(r => r.GetAll())
+                .Returns(() => postsWereCreated);
+
+            mockPostRepository
+                .Setup(r => r.Get(It.IsAny<Guid>()))
                 .Returns<Guid>((id) => postsWereCreated.SingleOrDefault(p => p.Id == id));
+
+            mockPostRepository
+                .Setup(r => r.Update(It.Is<Post>(p => postsWereCreated.All(x => x.Id != p.Id))))
+                .Returns(false);
+
+            mockPostRepository
+                .Setup(r => r.Update(It.IsAny<Post>()))
+                .Returns(true)
+                .Callback<Post>(p => 
+                {                    
+                    var postToBeUpdated = postsWereCreated.Single(x => x.Id == p.Id);
+                    int indexOfPostToBeUpdated = postsWereCreated.IndexOf(postToBeUpdated);
+                    postsWereCreated[indexOfPostToBeUpdated] = new Post(p.Id, p.Body);
+                });
 
             return new PostsService(mockPostRepository.Object);
         }
@@ -179,6 +223,25 @@ namespace TravixTest.Logic.Tests
         }
 
         #endregion
+
+        private class PostComparerIgnoringComments : IEqualityComparer<Post>
+        {
+            public bool Equals(Post x, Post y)
+            {
+                if (x == null && y == null)
+                    return true;
+
+                if (x == null || y == null)
+                    return false;
+
+                return x.Id == y.Id && x.Body.Equals(y.Body, StringComparison.Ordinal);
+            }
+
+            public int GetHashCode(Post obj)
+            {
+                return new { obj.Id, obj.Body }.GetHashCode();
+            }
+        }
 
         private enum WriteOperationTypes
         {

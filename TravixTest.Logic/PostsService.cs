@@ -24,7 +24,7 @@ namespace TravixTest.Logic
             return repository.GetAll();
         }
 
-        public void Add(Post post)
+        public bool Add(Post post)
         {
             Validate(post);
 
@@ -33,10 +33,10 @@ namespace TravixTest.Logic
             if (postAlreadyAdded != null)
                 throw new Exception("post already added");
 
-            repository.Add(post);
+            return repository.Add(post);
         }
 
-        public void Update(Post post)
+        public bool Update(Post post)
         {
             Validate(post);
 
@@ -45,20 +45,20 @@ namespace TravixTest.Logic
             if (oldPost == null)
                 throw new Exception("post not found for update");
 
-            repository.Add(post);
+            return repository.Update(post);
         }
 
-        public void Delete(Guid id)
+        public bool Delete(Guid id)
         {
             var post = Get(id);
 
             if (post == null)
                 throw new Exception("post not found for delete");
 
-            repository.Delete(id);
+            return repository.Delete(id);
         }
 
-        public void Validate(Post post)
+        private void Validate(Post post)
         {
             if (post.Id == Guid.Empty)
                 throw new PostValidationException("Cannot be empty", PostValidatedAttribute.Id);

@@ -8,8 +8,9 @@ namespace TravixTest.Logic.Contracts
     {
         Post Get(Guid id);
         IEnumerable<Post> GetAll();
-        void Add(Post post);
-        void Delete(Guid id);
+        bool Add(Post post);
+        bool Update(Post post);
+        bool Delete(Guid id);
     }
 
     public interface ICommentRepository
