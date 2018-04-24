@@ -2,18 +2,21 @@
 using System.Collections.Generic;
 using TravixTest.Logic.Contracts;
 using TravixTest.Logic.DomainModels;
+using TravixTest.Logic.Validation;
 
 namespace TravixTest.Logic
-{    
+{
     public class CommentsService
     {
         private readonly ICommentRepository repository;
         private readonly IPostRepository postRepository;
+        private readonly CommentValidator validator;
 
         public CommentsService(ICommentRepository repository, IPostRepository postRepository)
         {
             this.repository = repository;
             this.postRepository = postRepository;
+            validator = new CommentValidator();
         }
 
         public Comment Get(Guid id)
@@ -33,7 +36,7 @@ namespace TravixTest.Logic
 
         public bool Add(Comment comment)
         {
-            Validate(comment);
+            validator.Validate(comment);
 
             var postAlreadyAdded = postRepository.Get(comment.PostId);
 
@@ -57,34 +60,5 @@ namespace TravixTest.Logic
 
             return repository.Delete(id);
         }
-
-        private void Validate(Comment comment)
-        {
-            if (comment.Id == Guid.Empty)
-                throw new CommentValidationException("Cannot be empty", CommentValidatedAttribute.Id);
-
-            if (comment.PostId == Guid.Empty)
-                throw new CommentValidationException("Cannot be empty", CommentValidatedAttribute.PostId);
-
-            if (string.IsNullOrWhiteSpace(comment.Text))
-                throw new CommentValidationException("Cannot be empty", CommentValidatedAttribute.Text);
-        }
-    }
-
-    public class CommentValidationException : Exception
-    {
-        public CommentValidatedAttribute InvalidAttribute { get; }
-
-        public CommentValidationException(string message, CommentValidatedAttribute invalidAttribute) : base(message)
-        {
-            InvalidAttribute = invalidAttribute;
-        }
-    }
-
-    public enum CommentValidatedAttribute
-    {
-        Id,
-        PostId,
-        Text
     }
 }

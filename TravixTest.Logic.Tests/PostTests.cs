@@ -4,6 +4,7 @@ using System.Linq;
 using Moq;
 using TravixTest.Logic.Contracts;
 using TravixTest.Logic.DomainModels;
+using TravixTest.Logic.Validation;
 using Xunit;
 
 namespace TravixTest.Logic.Tests

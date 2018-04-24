@@ -12,4 +12,20 @@ namespace TravixTest.Logic.Contracts
         bool Update(Post post);
         bool Delete(Guid id);
     }
+
+    public interface IQueryProvider<T> where T : IDomainModel
+    {
+        T ApplyScalarFilter();
+        IEnumerable<T> ApplyVectorFilter();
+    }
+
+    public abstract class ScalarQuery<T> where T : IDomainModel
+    {
+        private readonly IQueryProvider<T> queryProvider;
+
+        protected ScalarQuery(IQueryProvider<T> queryProvider)
+        {
+            this.queryProvider = queryProvider;
+        }
+    }
 }
