@@ -143,6 +143,27 @@ namespace TravixTest.Logic.Tests
             Assert.Equal(updatedPost.Body, gotPost.Body);
         }
 
+        [Fact]
+        public void Delete_IfPostWasNotAddedOrAlreadyDeleted_ShouldThrowException()
+        {
+            var service = CreateTestingService();
+            var postNotExisting = new Post(Guid.NewGuid(), "not existing post body");
+
+            Assert.Throws<Exception>(() => service.Delete(postNotExisting.Id));
+        }
+
+        [Fact]
+        public void Delete_IfAddedPost_ShouldNotBeFoundByGetAndGetAll()
+        {
+            var service = CreateTestingService();
+            var postToBeDeleted = new Post(Guid.NewGuid(), "to be deleted post body");
+            service.Add(postToBeDeleted);
+            service.Delete(postToBeDeleted.Id);
+
+            Assert.Null(service.Get(postToBeDeleted.Id));
+            Assert.DoesNotContain(service.GetAll(), p => p.Id == postToBeDeleted.Id);
+        }
+
         #endregion
 
         #region Private methods
@@ -172,7 +193,7 @@ namespace TravixTest.Logic.Tests
                 .Returns(false);
 
             mockPostRepository
-                .Setup(r => r.Update(It.IsAny<Post>()))
+                .Setup(r => r.Update(It.Is<Post>(p => postsWereCreated.Any(x => x.Id == p.Id))))
                 .Returns(true)
                 .Callback<Post>(p => 
                 {                    
@@ -181,6 +202,19 @@ namespace TravixTest.Logic.Tests
                     postsWereCreated[indexOfPostToBeUpdated] = new Post(p.Id, p.Body);
                 });
 
+            mockPostRepository
+                .Setup(r => r.Delete(It.Is<Guid>(id => postsWereCreated.All(x => x.Id != id))))
+                .Returns(false);
+
+            mockPostRepository
+                .Setup(r => r.Delete(It.Is<Guid>(id => postsWereCreated.Any(x => x.Id == id))))
+                .Returns(true)
+                .Callback<Guid>(id =>
+                {
+                    var postToBeDeleted = postsWereCreated.Single(x => x.Id == id);
+                    postsWereCreated.Remove(postToBeDeleted);
+                });
+            
             return new PostsService(mockPostRepository.Object);
         }
 

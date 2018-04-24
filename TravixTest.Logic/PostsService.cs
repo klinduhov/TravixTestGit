@@ -2,16 +2,19 @@
 using System.Collections.Generic;
 using TravixTest.Logic.Contracts;
 using TravixTest.Logic.DomainModels;
+using TravixTest.Logic.Validation;
 
 namespace TravixTest.Logic
 {
     public class PostsService
     {
         private readonly IPostRepository repository;
+        private readonly PostValidator validator;
 
         public PostsService(IPostRepository repository)
         {
             this.repository = repository;
+            validator = new PostValidator();
         }
 
         public Post Get(Guid id)
@@ -26,7 +29,7 @@ namespace TravixTest.Logic
 
         public bool Add(Post post)
         {
-            Validate(post);
+            validator.Validate(post);
 
             var postAlreadyAdded = Get(post.Id);
 
@@ -38,7 +41,7 @@ namespace TravixTest.Logic
 
         public bool Update(Post post)
         {
-            Validate(post);
+            validator.Validate(post);
 
             var oldPost = Get(post.Id);
 
@@ -57,30 +60,5 @@ namespace TravixTest.Logic
 
             return repository.Delete(id);
         }
-
-        private void Validate(Post post)
-        {
-            if (post.Id == Guid.Empty)
-                throw new PostValidationException("Cannot be empty", PostValidatedAttribute.Id);
-
-            if (string.IsNullOrWhiteSpace(post.Body))
-                throw new PostValidationException("Cannot be empty", PostValidatedAttribute.Body);
-        }
-    }
-
-    public class PostValidationException : Exception
-    {
-        public PostValidatedAttribute InvalidAttribute { get; }
-
-        public PostValidationException(string message, PostValidatedAttribute invalidAttribute) : base(message)
-        {
-            InvalidAttribute = invalidAttribute;
-        }
-    }
-
-    public enum PostValidatedAttribute
-    {
-        Id,
-        Body
     }
 }
