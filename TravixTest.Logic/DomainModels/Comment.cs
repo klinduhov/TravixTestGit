@@ -7,7 +7,7 @@ namespace TravixTest.Logic.DomainModels
         public Guid Id { get; }
         public Guid PostId { get; }
         public string Text { get; }
-        public bool IsRead { get; }
+        public bool IsRead { get; set; }
 
         public Comment(Guid id, Guid postId, string text, bool isRead = false)
         {

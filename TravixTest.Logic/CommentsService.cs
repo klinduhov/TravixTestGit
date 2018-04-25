@@ -7,64 +7,45 @@ using TravixTest.Logic.Validation;
 
 namespace TravixTest.Logic
 {
-    public class CommentsService
+    public class CommentsService : ServiceBase<Comment, CommentValidationException>
     {
-        private readonly IRepository<Comment> repository;
         private readonly IRepository<Post> postRepository;
-        private readonly CommentValidator validator;
 
-        public CommentsService(IRepository<Comment> repository, IRepository<Post> postRepository)
+        public CommentsService(IRepository<Comment> repository, IRepository<Post> postRepository) :
+            base(repository, new CommentValidator())
         {
-            this.repository = repository;
             this.postRepository = postRepository;
-            validator = new CommentValidator();
-        }
-
-        public Comment Get(Guid id)
-        {
-            return repository.Get(new ByIdSpecification<Comment>(id));
-        }
-
-        public IEnumerable<Comment> GetAll()
-        {
-            return repository.GetAll();
         }
 
         public IEnumerable<Comment> GetAllByPost(Guid postId)
         {
-            return repository.GetAllFiltered(new CommentsByPostSpecification(postId));
+            return Repository.GetAllFiltered(new CommentsByPostSpecification(postId));
         }
 
         public IEnumerable<Comment> GetAllReadByPost(Guid postId)
         {
-            return repository.GetAllFiltered(new CommentsByPostSpecification(postId).And(new OnlyIsReadCommentSpecification()));
+            return Repository.GetAllFiltered(new CommentsByPostSpecification(postId).And(new OnlyIsReadCommentSpecification()));
         }
 
         public bool Add(Comment comment)
         {
-            validator.Validate(comment);
+            return Add(comment, c =>
+            {
+                var postAlreadyAdded = postRepository.Get(new ByIdSpecification<Post>(comment.PostId));
 
-            var postAlreadyAdded = postRepository.Get(new ByIdSpecification<Post>(comment.PostId));
+                if (postAlreadyAdded == null)
+                    throw new Exception("post not found for adding comment");
 
-            if (postAlreadyAdded == null)
-                throw new Exception("post not found for adding comment");
+                var commentAlreadyAdded = Get(comment.Id);
 
-            var commentAlreadyAdded = Get(comment.Id);
-
-            if (commentAlreadyAdded != null)
-                throw new Exception("comment not found for adding comment");
-
-            return repository.Add(comment);
+                if (commentAlreadyAdded != null)
+                    throw new Exception("already added");
+            });
         }
 
-        public bool Delete(Guid id)
+        public bool SetIsRead(Comment comment)
         {
-            var comment = Get(id);
-
-            if (comment == null)
-                throw new Exception("comment not found for delete");
-
-            return repository.Delete(comment);
+            return Update(comment, c => c.IsRead = true);
         }
     }
 }

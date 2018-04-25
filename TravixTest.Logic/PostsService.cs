@@ -7,59 +7,26 @@ using TravixTest.Logic.Validation;
 
 namespace TravixTest.Logic
 {
-    public class PostsService
+    public class PostsService : ServiceBase<Post, PostValidationException>
     {
-        private readonly IRepository<Post> repository;
-        private readonly PostValidator validator;
-
-        public PostsService(IRepository<Post> repository)
+        public PostsService(IRepository<Post> repository) : base(repository, new PostValidator())
         {
-            this.repository = repository;
-            validator = new PostValidator();
-        }
-
-        public Post Get(Guid id)
-        {
-            return repository.Get(new ByIdSpecification<Post>(id));
-        }
-
-        public IEnumerable<Post> GetAll()
-        {
-            return repository.GetAll();
         }
 
         public bool Add(Post post)
         {
-            validator.Validate(post);
+            return Add(post, p =>
+            {
+                var postAlreadyAdded = Get(post.Id);
 
-            var postAlreadyAdded = Get(post.Id);
-
-            if (postAlreadyAdded != null)
-                throw new Exception("post already added");
-
-            return repository.Add(post);
+                if (postAlreadyAdded != null)
+                    throw new Exception("already added");
+            });
         }
 
         public bool Update(Post post)
         {
-            validator.Validate(post);
-
-            var oldPost = Get(post.Id);
-
-            if (oldPost == null)
-                throw new Exception("post not found for update");
-
-            return repository.Update(post);
-        }
-
-        public bool Delete(Guid id)
-        {
-            var post = Get(id);
-
-            if (post == null)
-                throw new Exception("post not found for delete");
-
-            return repository.Delete(post);
+            return Update(post, null);
         }
     }
 }
