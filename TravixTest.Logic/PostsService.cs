@@ -17,7 +17,7 @@ namespace TravixTest.Logic
         {
             return Add(post, p =>
             {
-                var postAlreadyAdded = Get(post.Id);
+                var postAlreadyAdded = Get(p.Id);
 
                 if (postAlreadyAdded != null)
                     throw new Exception("already added");

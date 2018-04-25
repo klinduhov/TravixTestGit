@@ -31,12 +31,12 @@ namespace TravixTest.Logic
         {
             return Add(comment, c =>
             {
-                var postAlreadyAdded = postRepository.Get(new ByIdSpecification<Post>(comment.PostId));
+                var postAlreadyAdded = postRepository.Get(new ByIdSpecification<Post>(c.PostId));
 
                 if (postAlreadyAdded == null)
                     throw new Exception("post not found for adding comment");
 
-                var commentAlreadyAdded = Get(comment.Id);
+                var commentAlreadyAdded = Get(c.Id);
 
                 if (commentAlreadyAdded != null)
                     throw new Exception("already added");

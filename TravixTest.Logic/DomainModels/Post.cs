@@ -15,5 +15,10 @@ namespace TravixTest.Logic.DomainModels
             Id = id;
             Body = body;
         }
+
+        public Post(Guid id, string body, ICollection<Comment> comments) : this(id, body)
+        {
+            Comments = comments;
+        }
     }
 }
