@@ -4,6 +4,7 @@ using System.Linq;
 using Moq;
 using TravixTest.Logic.Contracts;
 using TravixTest.Logic.DomainModels;
+using TravixTest.Logic.Specifications;
 using TravixTest.Logic.Validation;
 using Xunit;
 
@@ -174,7 +175,7 @@ namespace TravixTest.Logic.Tests
             var postsWereCreated = new List<Post>();
             postsWereCreated.AddRange(Enumerable.Range(0, 5).Select(i => new Post(Guid.NewGuid(), $"test body {i}")));
 
-            var mockPostRepository = new Mock<IPostRepository>();
+            var mockPostRepository = new Mock<IRepository<Post>>();
 
             mockPostRepository
                 .Setup(r => r.Add(It.IsAny<Post>()))
@@ -186,8 +187,8 @@ namespace TravixTest.Logic.Tests
                 .Returns(() => postsWereCreated);
 
             mockPostRepository
-                .Setup(r => r.Get(It.IsAny<Guid>()))
-                .Returns<Guid>((id) => postsWereCreated.SingleOrDefault(p => p.Id == id));
+                .Setup(r => r.Get(It.IsAny<ByIdSpecification<Post>>()))
+                .Returns<ByIdSpecification<Post>>(sp => postsWereCreated.SingleOrDefault(sp.IsSatisifiedBy().Compile()));
 
             mockPostRepository
                 .Setup(r => r.Update(It.Is<Post>(p => postsWereCreated.All(x => x.Id != p.Id))))
@@ -204,15 +205,15 @@ namespace TravixTest.Logic.Tests
                 });
 
             mockPostRepository
-                .Setup(r => r.Delete(It.Is<Guid>(id => postsWereCreated.All(x => x.Id != id))))
+                .Setup(r => r.Delete(It.Is<Post>(p => postsWereCreated.All(x => x.Id != p.Id))))
                 .Returns(false);
 
             mockPostRepository
-                .Setup(r => r.Delete(It.Is<Guid>(id => postsWereCreated.Any(x => x.Id == id))))
+                .Setup(r => r.Delete(It.Is<Post>(p => postsWereCreated.Any(x => x.Id == p.Id))))
                 .Returns(true)
-                .Callback<Guid>(id =>
+                .Callback<Post>(p =>
                 {
-                    var postToBeDeleted = postsWereCreated.Single(x => x.Id == id);
+                    var postToBeDeleted = postsWereCreated.Single(x => x.Id == p.Id);
                     postsWereCreated.Remove(postToBeDeleted);
                 });
             
@@ -258,25 +259,6 @@ namespace TravixTest.Logic.Tests
         }
 
         #endregion
-
-        private class PostComparerIgnoringComments : IEqualityComparer<Post>
-        {
-            public bool Equals(Post x, Post y)
-            {
-                if (x == null && y == null)
-                    return true;
-
-                if (x == null || y == null)
-                    return false;
-
-                return x.Id == y.Id && x.Body.Equals(y.Body, StringComparison.Ordinal);
-            }
-
-            public int GetHashCode(Post obj)
-            {
-                return new { obj.Id, obj.Body }.GetHashCode();
-            }
-        }
 
         private enum WriteOperationTypes
         {

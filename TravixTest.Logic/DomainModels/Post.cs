@@ -8,19 +8,12 @@ namespace TravixTest.Logic.DomainModels
     {
         public Guid Id { get; }
         public string Body { get; }
-        public DateTime CreateDateTimeUtc { get; }
         public ICollection<Comment> Comments { get; } = new Collection<Comment>();
 
         public Post(Guid id, string body)
         {
             Id = id;
             Body = body;
-            CreateDateTimeUtc = DateTime.UtcNow;
-        }
-
-        public Post(Guid id, string body, ICollection<Comment> comments) : this(id, body)
-        {
-            Comments = comments;
         }
     }
 }

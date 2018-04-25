@@ -2,16 +2,17 @@
 using System.Collections.Generic;
 using TravixTest.Logic.Contracts;
 using TravixTest.Logic.DomainModels;
+using TravixTest.Logic.Specifications;
 using TravixTest.Logic.Validation;
 
 namespace TravixTest.Logic
 {
     public class PostsService
     {
-        private readonly IPostRepository repository;
+        private readonly IRepository<Post> repository;
         private readonly PostValidator validator;
 
-        public PostsService(IPostRepository repository)
+        public PostsService(IRepository<Post> repository)
         {
             this.repository = repository;
             validator = new PostValidator();
@@ -19,7 +20,7 @@ namespace TravixTest.Logic
 
         public Post Get(Guid id)
         {
-            return repository.Get(id);
+            return repository.Get(new ByIdSpecification<Post>(id));
         }
 
         public IEnumerable<Post> GetAll()
@@ -58,7 +59,7 @@ namespace TravixTest.Logic
             if (post == null)
                 throw new Exception("post not found for delete");
 
-            return repository.Delete(id);
+            return repository.Delete(post);
         }
     }
 }

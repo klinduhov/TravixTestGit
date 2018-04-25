@@ -7,14 +7,14 @@ namespace TravixTest.Logic.DomainModels
         public Guid Id { get; }
         public Guid PostId { get; }
         public string Text { get; }
-        public DateTime CreateDateTimeUtc { get; }
+        public bool IsRead { get; }
 
-        public Comment(Guid id, Guid postId, string text)
+        public Comment(Guid id, Guid postId, string text, bool isRead = false)
         {
             Id = id;
-            Text = text;
+            Text = text;            
             PostId = postId;
-            CreateDateTimeUtc = DateTime.UtcNow;
+            IsRead = isRead;
         }
     }
 }
