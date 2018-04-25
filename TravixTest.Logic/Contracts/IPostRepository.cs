@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using TravixTest.Logic.DomainModels;
+using TravixTest.Logic.QueriesCommands;
 
 namespace TravixTest.Logic.Contracts
 {
@@ -13,10 +14,16 @@ namespace TravixTest.Logic.Contracts
         bool Delete(Guid id);
     }
 
+    public interface IQueryFactory<T> where T : IDomainModel
+    {
+        IGetByIdQuery<T> GetByIdQuery();
+        IEnumerable<T> GetAll(IQuery<T> query);
+    }
+
     public interface IQueryProvider<T> where T : IDomainModel
     {
-        T ApplyScalarFilter();
-        IEnumerable<T> ApplyVectorFilter();
+        T ApplyScalarFilter(IQuery<T> query);
+        IEnumerable<T> ApplyVectorFilter(IQuery<T> query);
     }
 
     public abstract class ScalarQuery<T> where T : IDomainModel

@@ -8,18 +8,18 @@ namespace TravixTest.Logic
 {
     public class PostsService
     {
-        private readonly IPostRepository repository;
+        private readonly IQueryFactory<Post> queryfactory;
         private readonly PostValidator validator;
 
-        public PostsService(IPostRepository repository)
+        public PostsService(IQueryFactory<Post> queryfactory)
         {
-            this.repository = repository;
+            this.queryfactory = queryfactory;
             validator = new PostValidator();
         }
 
         public Post Get(Guid id)
         {
-            return repository.Get(id);
+            return queryfactory.GetByIdQuery().Execute();
         }
 
         public IEnumerable<Post> GetAll()

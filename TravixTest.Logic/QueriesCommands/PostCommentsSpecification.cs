@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq.Expressions;
 using TravixTest.Logic.DomainModels;
+using TravixTest.Logic.QueriesCommands;
 
 namespace TravixTest.Logic.Specifications
 {
