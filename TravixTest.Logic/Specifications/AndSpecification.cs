@@ -20,9 +20,20 @@ namespace TravixTest.Logic.Specifications
 
         public override Expression<Func<T, bool>> IsSatisifiedBy()
         {
-            BinaryExpression andExpression = Expression.AndAlso(left.IsSatisifiedBy().Body, right.IsSatisifiedBy().Body);
+            var leftExpression = left.IsSatisifiedBy();
+            var rightExpression = right.IsSatisifiedBy();
 
-            return Expression.Lambda<Func<T, bool>>(andExpression, left.IsSatisifiedBy().Parameters.Single());
+            return Compose(leftExpression, rightExpression, Expression.AndAlso);
+        }
+
+        private Expression<TExpr> Compose<TExpr>(Expression<TExpr> first, Expression<TExpr> second, Func<Expression, Expression, Expression> merge)
+        {
+            var map = first.Parameters
+                .Select((f, index) => new { f, s = second.Parameters[index] })
+                .ToDictionary(p => p.s, p => p.f);
+            var secondBody = ParameterRebinder.ReplaceParameters(map, second.Body);
+
+            return Expression.Lambda<TExpr>(merge(first.Body, secondBody), first.Parameters);
         }
     }
 }
