@@ -5,7 +5,7 @@ using System.Text;
 
 namespace TravixTest.DataAccess.Entities
 {
-    public class CommentEntity
+    public class CommentEntity : IEntity
     {
         public Guid Id { get; set; }
         public Guid PostId { get; set; }

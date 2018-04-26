@@ -4,7 +4,7 @@ using System.Text;
 
 namespace TravixTest.DataAccess.Entities
 {
-    public class PostEntity
+    public class PostEntity : IEntity
     {
         public Guid Id { get; set; }
         public string Body { get; set; }

@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using TravixTest.Logic.Contracts;
 using TravixTest.Logic.DomainModels;
-using TravixTest.Logic.Specifications;
 using TravixTest.Logic.Validation;
 
 namespace TravixTest.Logic

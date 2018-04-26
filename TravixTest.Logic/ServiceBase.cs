@@ -1,13 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Runtime.CompilerServices;
 using TravixTest.Logic.Contracts;
 using TravixTest.Logic.DomainModels;
+using TravixTest.Logic.DomainSpecifications;
 using TravixTest.Logic.Specifications;
 using TravixTest.Logic.Validation;
 
 namespace TravixTest.Logic
 {
+
     public abstract class ServiceBase<TModel, TException>
         where TModel : IDomainModel
         where TException : Exception
@@ -23,7 +26,7 @@ namespace TravixTest.Logic
 
         public TModel Get(Guid id)
         {
-            return Repository.Get(new ByIdSpecification<TModel>(id));
+            return Repository.Get(new Collection<DomainSpecificationBase> { new ByIdDomainSpecification(id) });
         }
 
         public IEnumerable<TModel> GetAll()

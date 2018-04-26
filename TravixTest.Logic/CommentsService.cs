@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using TravixTest.Logic.Contracts;
 using TravixTest.Logic.DomainModels;
-using TravixTest.Logic.Specifications;
+using TravixTest.Logic.DomainSpecifications;
 using TravixTest.Logic.Validation;
 
 namespace TravixTest.Logic
@@ -19,19 +20,23 @@ namespace TravixTest.Logic
 
         public IEnumerable<Comment> GetAllByPost(Guid postId)
         {
-            return Repository.GetAllFiltered(new CommentsByPostSpecification(postId));
+            return Repository.GetAllFiltered(new Collection<DomainSpecificationBase> { new CommentsByPostDomainSpecification(postId) });
         }
 
         public IEnumerable<Comment> GetAllReadByPost(Guid postId)
         {
-            return Repository.GetAllFiltered(new CommentsByPostSpecification(postId).And(new OnlyIsReadCommentSpecification()));
+            return Repository.GetAllFiltered(new Collection<DomainSpecificationBase>
+            {
+                new CommentsByPostDomainSpecification(postId),
+                new OnlyIsReadCommentDomainSpecification()
+            });
         }
 
         public bool Add(Comment comment)
         {
             return Add(comment, c =>
             {
-                var postAlreadyAdded = postRepository.Get(new ByIdSpecification<Post>(c.PostId));
+                var postAlreadyAdded = postRepository.Get(new Collection<DomainSpecificationBase> { new ByIdDomainSpecification(c.PostId) });
 
                 if (postAlreadyAdded == null)
                     throw new Exception("post not found for adding comment");

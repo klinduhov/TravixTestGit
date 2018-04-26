@@ -3,7 +3,7 @@ using TravixTest.DataAccess.Entities;
 
 namespace TravixTest.DataAccess
 {
-    public class PostsCommentsContext  :DbContext
+    public class PostsCommentsContext : DbContext
     {
         public DbSet<PostEntity> Posts { get; set; }
         public DbSet<CommentEntity> Comments { get; set; }
