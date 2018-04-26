@@ -10,63 +10,38 @@ using Xunit;
 
 namespace TravixTest.Logic.Tests
 {
-    public class PostTests
+    public class PostsServiceUnitTests : ServiceUnitTestsBase<Post>
     {
         #region Facts
 
         [Fact]
         public void GetAll_IfAddedPost_ShouldContainAddedOne()
         {
-            var service = CreateTestingService();
-            var postToBeAdded = new Post(Guid.NewGuid(), "added post body");
-
-            service.Add(postToBeAdded);
-            
-            Assert.Contains(service.GetAll(), p => p.Id == postToBeAdded.Id);
+            GetAll_IfAddedModel_ShouldContainAddedOne(CreateTestingService(), new Post(Guid.NewGuid(), "added post body"));
         }
 
         [Fact]
-        public void GetAll_IfNotAddedPost_ShouldNotContainAddedOne()
+        public void GetAll_IfNotAddedPost_ShouldNotContainNotAddedOne()
         {
-            var service = CreateTestingService();
-            var postNotAdded = new Post(Guid.NewGuid(), "not added post body");
-
-            Assert.DoesNotContain(service.GetAll(), p => p.Id == postNotAdded.Id);
+            GetAll_IfNotAddedModel_ShouldNotContainNotAddedOne(CreateTestingService(), new Post(Guid.NewGuid(), "not added post body"));
         }
 
         [Fact]
         public void Get_IfAddedPost_ShouldReturnNotNullOne()
         {
-            var service = CreateTestingService();
-            var postToBeAdded = new Post(Guid.NewGuid(), "added post body");
-
-            service.Add(postToBeAdded);
-
-            var gotPost = service.Get(postToBeAdded.Id);
-
-            Assert.NotNull(gotPost);
+            Get_IfAddedModel_ShouldReturnNotNullOne(CreateTestingService(), new Post(Guid.NewGuid(), "added post body"));
         }        
 
         [Fact]
         public void Get_IfNotAddedPost_ShouldReturnNull()
         {
-            var service = CreateTestingService();
-            var postNotAdded = new Post(Guid.NewGuid(), "not added post body");
-
-            var gotPost = service.Get(postNotAdded.Id);
-
-            Assert.Null(gotPost);
+            Get_IfNotAddedModel_ShouldReturnNull(CreateTestingService(), new Post(Guid.NewGuid(), "not added post body"));
         }
 
         [Fact]
         public void Get_IfAddedPost_ShouldReturnTheAddedOne()
         {
-            var service = CreateTestingService();
-            var postToBeAdded = new Post(Guid.NewGuid(), "added post body");
-            service.Add(postToBeAdded);
-            var gotPost = service.Get(postToBeAdded.Id);
-
-            Assert.Equal(postToBeAdded.Id, gotPost.Id);
+            Get_IfAddedModel_ShouldReturnTheAddedOne(CreateTestingService(), new Post(Guid.NewGuid(), "added post body"));
         }
 
         [Fact]
@@ -90,20 +65,13 @@ namespace TravixTest.Logic.Tests
         [Fact]
         public void Add_IfPostWasAlreadyAdded_ShouldThrowException()
         {
-            var service = CreateTestingService();
-            var postAlreadyAdded = service.GetAll().First();
-
-            Assert.Throws<Exception>(() => service.Add(postAlreadyAdded));
+            Add_IfModelWasAlreadyAdded_ShouldThrowException(CreateTestingService());
         }
 
         [Fact]
         public void Add_IfAddedTheSamePost_ShouldThrowException()
         {
-            var service = CreateTestingService();
-            var postToBeAdded = new Post(Guid.NewGuid(), "added post body");
-            service.Add(postToBeAdded);
-
-            Assert.Throws<Exception>(() => service.Add(postToBeAdded));
+            Add_IfAddedTheSameModel_ShouldThrowException(CreateTestingService(), new Post(Guid.NewGuid(), "added post body"));
         }
 
         [Fact]
@@ -148,77 +116,44 @@ namespace TravixTest.Logic.Tests
         [Fact]
         public void Delete_IfPostWasNotAddedOrAlreadyDeleted_ShouldThrowException()
         {
-            var service = CreateTestingService();
-            var postNotExisting = new Post(Guid.NewGuid(), "not existing post body");
-
-            Assert.Throws<Exception>(() => service.Delete(postNotExisting.Id));
+            Delete_IfAddedModelDeleted_ShouldNotBeFoundByGetAndGetAll(CreateTestingService(), 
+                new Post(Guid.NewGuid(), "not existing post body"));
         }
 
         [Fact]
-        public void Delete_IfAddedPost_ShouldNotBeFoundByGetAndGetAll()
+        public void Delete_IfAddedPostDeleted_ShouldNotBeFoundByGetAndGetAll()
         {
-            var service = CreateTestingService();
-            var postToBeDeleted = new Post(Guid.NewGuid(), "to be deleted post body");
-            service.Add(postToBeDeleted);
-            service.Delete(postToBeDeleted.Id);
-
-            Assert.Null(service.Get(postToBeDeleted.Id));
-            Assert.DoesNotContain(service.GetAll(), p => p.Id == postToBeDeleted.Id);
+            Delete_IfAddedModelDeleted_ShouldNotBeFoundByGetAndGetAll(CreateTestingService(),
+                new Post(Guid.NewGuid(), "to be deleted post body"));
         }
 
         #endregion
 
-        #region Private methods
-
-        private PostsService CreateTestingService()
+        private static PostsService CreateTestingService()
         {
             var postsWereCreated = new List<Post>();
             postsWereCreated.AddRange(Enumerable.Range(0, 5).Select(i => new Post(Guid.NewGuid(), $"test body {i}")));
 
             var mockPostRepository = new Mock<IRepository<Post>>();
 
-            mockPostRepository
-                .Setup(r => r.Add(It.IsAny<Post>()))
-                .Returns(true)
-                .Callback<Post>((p) => postsWereCreated.Add(p));
+            mockPostRepository.SetupGetAllModels(postsWereCreated);
+            mockPostRepository.SetupGetModel(postsWereCreated);
+            mockPostRepository.SetupUpdateModel(postsWereCreated);
+            mockPostRepository.SetupDeleteModel(postsWereCreated);
 
             mockPostRepository
-                .Setup(r => r.GetAll())
-                .Returns(() => postsWereCreated);
-
-            mockPostRepository
-                .Setup(r => r.Get(It.IsAny<ByIdSpecification<Post>>()))
-                .Returns<ByIdSpecification<Post>>(sp => postsWereCreated.SingleOrDefault(sp.IsSatisifiedBy().Compile()));
-
-            mockPostRepository
-                .Setup(r => r.Update(It.Is<Post>(p => postsWereCreated.All(x => x.Id != p.Id))))
+                .Setup(r => r.Add(It.Is<Post>(p => postsWereCreated.Any(x => x.Id == p.Id))))
                 .Returns(false);
 
             mockPostRepository
-                .Setup(r => r.Update(It.Is<Post>(p => postsWereCreated.Any(x => x.Id == p.Id))))
+                .Setup(r => r.Add(It.Is<Post>(p => postsWereCreated.All(x => x.Id != p.Id))))
                 .Returns(true)
-                .Callback<Post>(p => 
-                {                    
-                    var postToBeUpdated = postsWereCreated.Single(x => x.Id == p.Id);
-                    int indexOfPostToBeUpdated = postsWereCreated.IndexOf(postToBeUpdated);
-                    postsWereCreated[indexOfPostToBeUpdated] = new Post(p.Id, p.Body);
-                });
+                .Callback<Post>(p => postsWereCreated.Add(p));
 
-            mockPostRepository
-                .Setup(r => r.Delete(It.Is<Post>(p => postsWereCreated.All(x => x.Id != p.Id))))
-                .Returns(false);
-
-            mockPostRepository
-                .Setup(r => r.Delete(It.Is<Post>(p => postsWereCreated.Any(x => x.Id == p.Id))))
-                .Returns(true)
-                .Callback<Post>(p =>
-                {
-                    var postToBeDeleted = postsWereCreated.Single(x => x.Id == p.Id);
-                    postsWereCreated.Remove(postToBeDeleted);
-                });
-            
             return new PostsService(mockPostRepository.Object);
         }
+
+        #region Private methods        
 
         private void WriteOperation_IfIdEmpty_ShouldThrowPostValidationException(WriteOperationTypes operationType)
         {
@@ -232,19 +167,19 @@ namespace TravixTest.Logic.Tests
         private void WriteOperation_IfBodyEmpty_ShouldThrowPostValidationException(WriteOperationTypes operationType)
         {
             var service = CreateTestingService();
-            var postWithWhiteSpacesBody = new Post(Guid.NewGuid(), "  ");
+            var postWithEmptyBody = new Post(Guid.NewGuid(), string.Empty);
             var action = GetWriteActionByType(operationType);
 
-            Assert.Throws<PostValidationException>(() => action(service, postWithWhiteSpacesBody));
+            Assert.Throws<PostValidationException>(() => action(service, postWithEmptyBody));            
         }
 
         private void WriteOperation_IfBodyContainsOnlySpaces_ShouldThrowPostValidationException(WriteOperationTypes operationType)
         {
             var service = CreateTestingService();
-            var postWithEmptyBody = new Post(Guid.NewGuid(), string.Empty);
+            var postWithWhiteSpacesBody = new Post(Guid.NewGuid(), "  ");
             var action = GetWriteActionByType(operationType);
 
-            Assert.Throws<PostValidationException>(() => action(service, postWithEmptyBody));
+            Assert.Throws<PostValidationException>(() => action(service, postWithWhiteSpacesBody));
         }
 
         private Action<PostsService, Post> GetWriteActionByType(WriteOperationTypes operationType)
@@ -264,6 +199,6 @@ namespace TravixTest.Logic.Tests
         {
             Add,
             Update
-        }               
+        }        
     }
 }

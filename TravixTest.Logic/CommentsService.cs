@@ -7,7 +7,7 @@ using TravixTest.Logic.Validation;
 
 namespace TravixTest.Logic
 {
-    public class CommentsService : ServiceBase<Comment, CommentValidationException>
+    public class CommentsService : ServiceBase<Comment, CommentValidationException>, IService<Comment>
     {
         private readonly IRepository<Post> postRepository;
 

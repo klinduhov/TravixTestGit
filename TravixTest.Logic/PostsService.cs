@@ -7,7 +7,7 @@ using TravixTest.Logic.Validation;
 
 namespace TravixTest.Logic
 {
-    public class PostsService : ServiceBase<Post, PostValidationException>
+    public class PostsService : ServiceBase<Post, PostValidationException>, IService<Post>
     {
         public PostsService(IRepository<Post> repository) : base(repository, new PostValidator())
         {

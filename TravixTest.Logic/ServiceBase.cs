@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using TravixTest.Logic.Contracts;
 using TravixTest.Logic.DomainModels;
 using TravixTest.Logic.Specifications;

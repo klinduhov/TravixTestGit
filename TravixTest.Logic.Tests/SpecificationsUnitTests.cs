@@ -5,7 +5,7 @@ using Xunit;
 
 namespace TravixTest.Logic.Tests
 {
-    public class SpecificationTests
+    public class SpecificationsUnitTests
     {
         [Fact]
         public void CommentsPostSpec_IfInputPostIsNotEqualOneFromComment_ExprIsFalse()
