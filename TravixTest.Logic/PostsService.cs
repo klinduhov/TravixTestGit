@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using TravixTest.Logic.Contracts;
 using TravixTest.Logic.DomainModels;
 using TravixTest.Logic.Validation;
@@ -14,27 +15,27 @@ namespace TravixTest.Logic
             this.repository = repository;
         }
 
-        public void Add(Post post)
+        public async Task AddAsync(Post post)
         {
-            Add(post, p =>
+            await AddAsync(post, async p =>
             {
-                var postAlreadyAdded = Get(p.Id);
+                var postAlreadyAdded = await GetAsync(p.Id);
 
                 if (postAlreadyAdded != null)
                     throw new Exception("already added");
             });
         }
 
-        public void Update(Post post)
+        public async Task UpdateAsync(Post post)
         {
             Validator.Validate(post);
 
-            var oldPost = Get(post.Id);
+            var oldPost = await GetAsync(post.Id);
 
             if (oldPost == null)
                 throw new Exception("not found for update");
 
-            repository.Update(post);
+            await repository.UpdateAsync(post);
         }
     }
 }

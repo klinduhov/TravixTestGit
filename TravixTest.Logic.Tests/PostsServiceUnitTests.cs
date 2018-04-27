@@ -97,17 +97,17 @@ namespace TravixTest.Logic.Tests
             var service = CreateTestingService();
             var postNotExisting = new Post(Guid.NewGuid(), "not existing post body");
 
-            Assert.Throws<Exception>(() => service.Update(postNotExisting));
+            Assert.Throws<Exception>(() => service.UpdateAsync(postNotExisting).Wait());
         }
 
         [Fact]
         public void Update_IfUpdatedPostBody_GetPostShouldReturnTheSameBody()
         {
             var service = CreateTestingService();
-            var postToBeUpdated = service.GetAll().First();
+            var postToBeUpdated = service.GetAllAsync().SyncResult().First();
             var updatedPost = new Post(postToBeUpdated.Id, $"updated post body {Guid.NewGuid()}");
-            service.Update(updatedPost);
-            var gotPost = service.Get(updatedPost.Id);
+            service.UpdateAsync(updatedPost).Wait();
+            var gotPost = service.GetAsync(updatedPost.Id).SyncResult();
 
             Assert.Equal(updatedPost.Body, gotPost.Body);
         }
@@ -139,11 +139,11 @@ namespace TravixTest.Logic.Tests
             mockPostRepository.SetupGetModel(postsWereCreated);
 
             mockPostRepository
-                .Setup(r => r.Delete(It.Is<Post>(p => postsWereCreated.All(x => x.Id != p.Id))));
+                .Setup(r => r.DeleteAsync(It.Is<Post>(p => postsWereCreated.All(x => x.Id != p.Id))));
                 //.Returns(false);
 
             mockPostRepository
-                .Setup(r => r.Delete(It.Is<Post>(p => postsWereCreated.Any(x => x.Id == p.Id))))
+                .Setup(r => r.DeleteAsync(It.Is<Post>(p => postsWereCreated.Any(x => x.Id == p.Id))))
                 //.Returns(true)
                 .Callback<Post>(p =>
                 {
@@ -152,11 +152,11 @@ namespace TravixTest.Logic.Tests
                 });
 
             mockPostRepository
-                .Setup(r => r.Update(It.Is<Post>(p => postsWereCreated.All(x => x.Id != p.Id))));
+                .Setup(r => r.UpdateAsync(It.Is<Post>(p => postsWereCreated.All(x => x.Id != p.Id))));
                 //.Returns(false);
 
             mockPostRepository
-                .Setup(r => r.Update(It.Is<Post>(p => postsWereCreated.Any(x => x.Id == p.Id))))
+                .Setup(r => r.UpdateAsync(It.Is<Post>(p => postsWereCreated.Any(x => x.Id == p.Id))))
                 //.Returns(true)
                 .Callback<Post>(p =>
                 {
@@ -166,11 +166,11 @@ namespace TravixTest.Logic.Tests
                 });
 
             mockPostRepository
-                .Setup(r => r.Add(It.Is<Post>(p => postsWereCreated.Any(x => x.Id == p.Id))));
+                .Setup(r => r.AddAsync(It.Is<Post>(p => postsWereCreated.Any(x => x.Id == p.Id))));
                 //.Returns(false);
 
             mockPostRepository
-                .Setup(r => r.Add(It.Is<Post>(p => postsWereCreated.All(x => x.Id != p.Id))))
+                .Setup(r => r.AddAsync(It.Is<Post>(p => postsWereCreated.All(x => x.Id != p.Id))))
                 //.Returns(true)
                 .Callback<Post>(p => postsWereCreated.Add(p));
 
@@ -210,8 +210,8 @@ namespace TravixTest.Logic.Tests
         {
             var changeActionsDictionary = new Dictionary<WriteOperationTypes, Action<PostsService, Post>>
             {
-                {WriteOperationTypes.Add, (s, p) => s.Add(p)},
-                {WriteOperationTypes.Update,(s, p) => s.Update(p)}
+                {WriteOperationTypes.Add, (s, p) => s.AddAsync(p).Wait()},
+                {WriteOperationTypes.Update,(s, p) => s.UpdateAsync(p).Wait()}
             };
 
             return changeActionsDictionary[operationType];

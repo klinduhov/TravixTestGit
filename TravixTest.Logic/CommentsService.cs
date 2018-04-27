@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using TravixTest.Logic.Contracts;
 using TravixTest.Logic.DomainModels;
 using TravixTest.Logic.Validation;
@@ -18,25 +19,25 @@ namespace TravixTest.Logic
             this.postRepository = postRepository;
         }
 
-        public IEnumerable<Comment> GetAllByPost(Guid postId)
+        public async Task<IEnumerable<Comment>> GetAllByPostAsync(Guid postId)
         {
-            return repository.GetAllByPost(postId);
+            return await repository.GetAllByPostAsync(postId);
         }
 
-        public void Add(Comment comment)
+        public async Task AddAsync(Comment comment)
         {
-            Add(comment, c =>
-            {
-                var postAlreadyAdded = postRepository.Get(c.PostId);
+            await AddAsync(comment, async c =>
+             {
+                 var postAlreadyAdded = await postRepository.GetAsync(c.PostId);
 
-                if (postAlreadyAdded == null)
-                    throw new Exception("post not found for adding comment");
+                 if (postAlreadyAdded == null)
+                     throw new Exception("post not found for adding comment");
 
-                var commentAlreadyAdded = Get(c.Id);
+                 var commentAlreadyAdded = await GetAsync(c.Id);
 
-                if (commentAlreadyAdded != null)
-                    throw new Exception("already added");
-            });
+                 if (commentAlreadyAdded != null)
+                     throw new Exception("already added");
+             });
         }
     }
 }

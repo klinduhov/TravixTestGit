@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using TravixTest.DataAccess.Entities;
 using TravixTest.Logic.Contracts;
 using TravixTest.Logic.DomainModels;
@@ -14,45 +15,42 @@ namespace TravixTest.DataAccess
         {
         }
 
-        public override void Delete(Comment model)
+        public override async Task DeleteAsync(Comment model)
         {
-            Delete(model, c => new CommentEntity { Id = c.Id });
+            await DeleteAsync(model, c => new CommentEntity { Id = c.Id });
         }
 
-        public override Comment Get(Guid id)
+        public override async Task<Comment> GetAsync(Guid id)
         {
-            CommentEntity result = null;
+            CommentEntity result;
 
-            AtomicDbAction(db =>
+            using (var db = GenerateContext())
             {
-                result = db.Comments.SingleOrDefault(en => en.Id == id);
-            });
+                result = await db.Comments.SingleOrDefaultAsync(en => en.Id == id);
+            };
 
             return MapEntityToModel(result);
         }
 
-        public IEnumerable<Comment> GetAllByPost(Guid postId)
+        public async Task<IEnumerable<Comment>> GetAllByPostAsync(Guid postId)
         {
-            var result = new List<CommentEntity>();
+            List<CommentEntity> result;
 
-            AtomicDbAction(db =>
+            using (var db = GenerateContext())
             {
-                result = db.Comments.Where(c => c.PostId == postId).ToList();
-            });
+                result = await db.Comments.Where(c => c.PostId == postId).ToListAsync();
+            }
 
             return result.Select(MapEntityToModel);
         }
 
-        public override IEnumerable<Comment> GetAll()
+        public override async Task<IEnumerable<Comment>> GetAllASync()
         {
-            var result = new List<CommentEntity>();
-
-            AtomicDbAction(db =>
+            using (var db = GenerateContext())
             {
-                result = db.Comments.ToList();
-            });
-
-            return result.Select(MapEntityToModel);
+                var result = await db.Comments.ToListAsync();
+                return result.Select(MapEntityToModel);
+            }
         }
 
         protected override Comment MapEntityToModel(CommentEntity entity)

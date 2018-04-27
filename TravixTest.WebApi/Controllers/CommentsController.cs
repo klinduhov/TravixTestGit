@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using TravixTest.Logic.Contracts;
@@ -28,25 +26,25 @@ namespace TravixTest.WebApi.Controllers
 
         // GET: api/Comments
         [HttpGet]
-        public IEnumerable<Comment> Get()
+        public async Task<IEnumerable<Comment>> Get()
         {
-            return service.GetAll();
+            return await service.GetAllAsync();
         }
 
         // GET: api/Comments/C80D232D-9BB1-4BCD-9C7C-470FFD73D8A7
         [HttpGet("{id}")]
-        public Comment Get(Guid id)
+        public async Task<Comment> Get(Guid id)
         {
-            return service.Get(id);
+            return await service.GetAsync(id);
         }
 
         // POST: api/Comments
         [HttpPost]
-        public void Post([FromBody]CommentInputModel commentInput)
+        public async Task Post([FromBody]CommentInputModel commentInput)
         {
             try
             {
-                service.Add(new Comment(Guid.NewGuid(), commentInput.PostId, commentInput.Text));
+                await service.AddAsync(new Comment(Guid.NewGuid(), commentInput.PostId, commentInput.Text));
             }
             catch (CommentValidationException e)
             {
@@ -57,9 +55,9 @@ namespace TravixTest.WebApi.Controllers
 
         // DELETE: api/Comments/C80D232D-9BB1-4BCD-9C7C-470FFD73D8A7
         [HttpDelete("{id}")]
-        public void Delete(Guid id)
+        public async Task Delete(Guid id)
         {
-            service.Delete(id);
+            await service.DeleteAsync(id);
         }
     }
 }

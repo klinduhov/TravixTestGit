@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using TravixTest.DataAccess.Entities;
 using TravixTest.Logic.Contracts;
 using TravixTest.Logic.DomainModels;
@@ -15,43 +16,42 @@ namespace TravixTest.DataAccess
         {
         }
 
-        public override Post Get(Guid id)
+        public override async Task<Post> GetAsync(Guid id)
         {
-            PostEntity result = null;
+            PostEntity result;
 
-            AtomicDbAction(db =>
+            using (var db = GenerateContext())
             {
-                result = db.Posts.Include(p => p.Comments).SingleOrDefault(en => en.Id == id);
-            });
+                result = await db.Posts.Include(p => p.Comments).SingleOrDefaultAsync(en => en.Id == id);
+            }
 
             return MapEntityToModel(result);
         }
 
-        public override IEnumerable<Post> GetAll()
+        public override async Task<IEnumerable<Post>> GetAllASync()
         {
-            var result = new List<PostEntity>();
-
-            AtomicDbAction(db =>
+            using (var db = GenerateContext())
             {
-                result = db.Posts.Include(p => p.Comments).ToList();
-            });
-
-            return result.Select(MapEntityToModel);
+                var result = await db.Posts.Include(p => p.Comments).ToListAsync();
+                return result.Select(MapEntityToModel);
+            }
         }
 
-        public override void Delete(Post model)
+        public override async Task DeleteAsync(Post model)
         {
-            Delete(model, p => new PostEntity { Id = p.Id });
+            await DeleteAsync(model, p => new PostEntity { Id = p.Id });
         }
 
-        public void Update(Post model)
+        public async Task UpdateAsync(Post model)
         {
-            AtomicModify(db =>
+            using (var db = GenerateContext())
             {
                 var entity = new PostEntity { Id = model.Id };
                 db.Set<PostEntity>().Attach(entity);
                 entity.Body = model.Body;
-            });
+
+                await db.SaveChangesAsync();
+            }
         }
 
         protected override Post MapEntityToModel(PostEntity entity)

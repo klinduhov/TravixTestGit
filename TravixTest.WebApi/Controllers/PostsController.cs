@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using TravixTest.Logic.Contracts;
@@ -26,35 +27,35 @@ namespace TravixTest.WebApi.Controllers
         }
 
         [HttpGet]
-        public IEnumerable<Post> Get()
+        public async Task<IEnumerable<Post>> Get()
         {
-            return postsService.GetAll();
+            return await postsService.GetAllAsync();
         }
 
         // GET: api/Posts/C80D232D-9BB1-4BCD-9C7C-470FFD73D8A7
         [HttpGet("{id}")]
-        public Post Get(Guid id)
+        public async Task<Post> Get(Guid id)
         {
-            return postsService.Get(id);
+            return await postsService.GetAsync(id);
         }
 
         // GET: api/Posts/C80D232D-9BB1-4BCD-9C7C-470FFD73D8A7/comments
         [Route("{id}/comments")]
         [HttpGet]
-        public IEnumerable<Comment> GetComments(Guid id)
+        public async Task<IEnumerable<Comment>> GetComments(Guid id)
         {
-            return commentsService.GetAllByPost(id);
+            return await commentsService.GetAllByPostAsync(id);
         }
 
         // POST: api/Posts
         [HttpPost]
-        public void Post([FromBody]PostInputModel postInput)
+        public async Task Post([FromBody]PostInputModel postInput)
         {
             var post = new Post(Guid.NewGuid(), postInput.Body);
 
             try
             {
-                postsService.Add(post);
+                await postsService.AddAsync(post);
             }
             catch (PostValidationException e)
             {
@@ -66,13 +67,13 @@ namespace TravixTest.WebApi.Controllers
 
         // PUT: api/Posts/C80D232D-9BB1-4BCD-9C7C-470FFD73D8A7
         [HttpPut("{id}")]
-        public void Put(Guid id, [FromBody]PostInputModel postModel)
+        public async Task Put(Guid id, [FromBody]PostInputModel postModel)
         {
             var post = new Post(id, postModel.Body);
 
             try
             {
-                postsService.Update(post);
+                await postsService.UpdateAsync(post);
             }
             catch (PostValidationException e)
             {
@@ -84,9 +85,9 @@ namespace TravixTest.WebApi.Controllers
 
         // DELETE: api/Posts/C80D232D-9BB1-4BCD-9C7C-470FFD73D8A7
         [HttpDelete("{id}")]
-        public void Delete(Guid id)
+        public async Task Delete(Guid id)
         {
-            postsService.Delete(id);
+            await postsService.DeleteAsync(id);
         }
     }
 }

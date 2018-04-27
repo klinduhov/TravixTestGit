@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Moq;
 using TravixTest.Logic.Contracts;
 using TravixTest.Logic.DomainModels;
@@ -59,9 +60,9 @@ namespace TravixTest.Logic.Tests
         {
             var commentsServiceTestWrapper = CreateCommentsServiceTestWrapper();
             var commentToBeAdded = GenerateCommentToBeAdded(commentsServiceTestWrapper);
-            commentsServiceTestWrapper.CommentsService.Add(commentToBeAdded);
+            commentsServiceTestWrapper.CommentsService.AddAsync(commentToBeAdded).Wait();
 
-            Assert.Contains(commentsServiceTestWrapper.CommentsService.GetAllByPost(commentToBeAdded.PostId), 
+            Assert.Contains(commentsServiceTestWrapper.CommentsService.GetAllByPostAsync(commentToBeAdded.PostId).SyncResult(), 
                 c => c.Id == commentToBeAdded.Id);
         }
 
@@ -71,7 +72,7 @@ namespace TravixTest.Logic.Tests
             var commentsServiceTestWrapper = CreateCommentsServiceTestWrapper();
             var postWithNoComments = commentsServiceTestWrapper.GetPostWithNoCommentsFromTestSet();
 
-            Assert.Empty(commentsServiceTestWrapper.CommentsService.GetAllByPost(postWithNoComments.Id));
+            Assert.Empty(commentsServiceTestWrapper.CommentsService.GetAllByPostAsync(postWithNoComments.Id).SyncResult());
         }
 
         [Fact]
@@ -80,7 +81,8 @@ namespace TravixTest.Logic.Tests
             var commentsServiceTestWrapper = CreateCommentsServiceTestWrapper();
             var commentWithEmptyPostId = new Comment(Guid.NewGuid(), Guid.Empty, "comment with empty post id");
 
-            Assert.Throws<CommentValidationException>(() => commentsServiceTestWrapper.CommentsService.Add(commentWithEmptyPostId));
+            Assert.Throws<CommentValidationException>(() => 
+                commentsServiceTestWrapper.CommentsService.AddAsync(commentWithEmptyPostId).Wait());
         }
 
         [Fact]
@@ -89,7 +91,8 @@ namespace TravixTest.Logic.Tests
             var commentsServiceTestWrapper = CreateCommentsServiceTestWrapper();
             var commentWithEmptyText = new Comment(Guid.NewGuid(), Guid.NewGuid(), String.Empty);
 
-            Assert.Throws<CommentValidationException>(() => commentsServiceTestWrapper.CommentsService.Add(commentWithEmptyText));
+            Assert.Throws<CommentValidationException>(() => 
+                commentsServiceTestWrapper.CommentsService.AddAsync(commentWithEmptyText).Wait());
         }
 
         [Fact]
@@ -98,7 +101,8 @@ namespace TravixTest.Logic.Tests
             var commentsServiceTestWrapper = CreateCommentsServiceTestWrapper();
             var commentWithWhiteSpacesText = new Comment(Guid.NewGuid(), Guid.NewGuid(), "   ");
 
-            Assert.Throws<CommentValidationException>(() => commentsServiceTestWrapper.CommentsService.Add(commentWithWhiteSpacesText));
+            Assert.Throws<CommentValidationException>(() => 
+                commentsServiceTestWrapper.CommentsService.AddAsync(commentWithWhiteSpacesText).Wait());
         }
 
         [Fact]
@@ -137,10 +141,11 @@ namespace TravixTest.Logic.Tests
             var commentServiceTestWrapper = CreateCommentsServiceTestWrapper();
             var commentToBeDeleted = GenerateCommentToBeAdded(commentServiceTestWrapper);
             var service = commentServiceTestWrapper.CommentsService;
-            service.Add(commentToBeDeleted);
-            service.Delete(commentToBeDeleted.Id);
+            service.AddAsync(commentToBeDeleted).Wait();
+            service.DeleteAsync(commentToBeDeleted.Id).Wait();
 
-            Assert.DoesNotContain(service.GetAllByPost(commentToBeDeleted.PostId), c => c.Id == commentToBeDeleted.Id);
+            Assert.DoesNotContain(service.GetAllByPostAsync(commentToBeDeleted.PostId).SyncResult(), 
+                c => c.Id == commentToBeDeleted.Id);
         }
 
         #endregion
@@ -176,19 +181,19 @@ namespace TravixTest.Logic.Tests
             var mockCommentRepository = new Mock<ICommentsRepository>();
 
             mockCommentRepository
-                .Setup(r => r.GetAll())
-                .Returns(() => commentsWereCreated);
+                .Setup(r => r.GetAllASync())
+                .ReturnsAsync(() => commentsWereCreated);
 
             mockCommentRepository
-                .Setup(r => r.Get(It.IsAny<Guid>()))
+                .Setup(r => r.GetAsync(It.IsAny<Guid>()).SyncResult())
                 .Returns<Guid>(id => commentsWereCreated.SingleOrDefault(x => x.Id == id));
 
             mockCommentRepository
-                .Setup(r => r.Delete(It.Is<Comment>(m => commentsWereCreated.All(x => x.Id != m.Id))));
+                .Setup(r => r.DeleteAsync(It.Is<Comment>(m => commentsWereCreated.All(x => x.Id != m.Id))));
                 //.Returns(false);
 
             mockCommentRepository
-                .Setup(r => r.Delete(It.Is<Comment>(m => commentsWereCreated.Any(x => x.Id == m.Id))))
+                .Setup(r => r.DeleteAsync(It.Is<Comment>(m => commentsWereCreated.Any(x => x.Id == m.Id))))
                 //.Returns(true)
                 .Callback<Comment>(m =>
                 {
@@ -197,18 +202,18 @@ namespace TravixTest.Logic.Tests
                 });
 
             mockCommentRepository
-                .Setup(r => r.Add(It.Is<Comment>(c =>
+                .Setup(r => r.AddAsync(It.Is<Comment>(c =>
                     postsWereCreated.All(p => p.Id != c.PostId) || commentsWereCreated.Any(x => x.Id == c.Id))));
                 //.Returns(false);
 
             mockCommentRepository
-                .Setup(r => r.Add(It.Is<Comment>(c => 
+                .Setup(r => r.AddAsync(It.Is<Comment>(c => 
                     postsWereCreated.Any(p => p.Id == c.PostId && commentsWereCreated.All(x => x.Id != c.Id)))))
                 //.Returns(true)
                 .Callback<Comment>(c => commentsWereCreated.Add(c));
 
             mockCommentRepository
-                .Setup(r => r.GetAllByPost(It.IsAny<Guid>()))
+                .Setup(r => r.GetAllByPostAsync(It.IsAny<Guid>()).SyncResult())
                 .Returns<Guid>(pid => commentsWereCreated.Where(x => x.PostId == pid));
 
             var mockPostRepository = new Mock<IPostsRepository>();
@@ -235,12 +240,12 @@ namespace TravixTest.Logic.Tests
 
             public Post GetFirstPostFromTestSet()
             {
-                return postRepository.GetAll().First();
+                return postRepository.GetAllASync().SyncResult().First();
             }
 
             public Post GetPostWithNoCommentsFromTestSet()
             {
-                return postRepository.GetAll().First(p => p.Id == postWithNoCommentsId);
+                return postRepository.GetAllASync().SyncResult().First(p => p.Id == postWithNoCommentsId);
             }
         }
         #endregion

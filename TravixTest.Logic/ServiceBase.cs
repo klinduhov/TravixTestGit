@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using TravixTest.Logic.Contracts;
 using TravixTest.Logic.DomainModels;
 using TravixTest.Logic.Validation;
@@ -20,33 +21,33 @@ namespace TravixTest.Logic
             Validator = validator;
         }
 
-        public TModel Get(Guid id)
+        public async Task<TModel> GetAsync(Guid id)
         {
-            return repository.Get(id);
+            return await repository.GetAsync(id);
         }
 
-        public IEnumerable<TModel> GetAll()
+        public async Task<IEnumerable<TModel>> GetAllAsync()
         {
-            return repository.GetAll();
+            return await repository.GetAllASync();
         }
 
-        protected void Add(TModel model, Action<TModel> additionalValidationForAdding)
+        protected async Task AddAsync(TModel model, Action<TModel> additionalValidationForAdding)
         {
             Validator.Validate(model);
 
             additionalValidationForAdding?.Invoke(model);
 
-            repository.Add(model);
+            await Task.Run(() => repository.AddAsync(model));
         }
 
-        public void Delete(Guid id)
+        public async Task DeleteAsync(Guid id)
         {
-            var model = Get(id);
+            var model = await GetAsync(id);
 
             if (model == null)
                 throw new Exception("not found for delete");
 
-            repository.Delete(model);
+            await Task.Run(() => repository.DeleteAsync(model));
         }
     }
 }
