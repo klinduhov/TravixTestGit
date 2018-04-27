@@ -76,53 +76,53 @@ namespace TravixTest.Logic.Tests
         }
 
         [Fact]
-        public void Add_IfPostIdEmpty_ShouldThrowPostValidationException()
+        public async Task Add_IfPostIdEmpty_ShouldThrowPostValidationException()
         {
             var commentsServiceTestWrapper = CreateCommentsServiceTestWrapper();
             var commentWithEmptyPostId = new Comment(Guid.NewGuid(), Guid.Empty, "comment with empty post id");
 
-            Assert.Throws<CommentValidationException>(() => 
-                commentsServiceTestWrapper.CommentsService.AddAsync(commentWithEmptyPostId).Wait());
+            await Assert.ThrowsAsync<CommentValidationException>(async () => 
+                await commentsServiceTestWrapper.CommentsService.AddAsync(commentWithEmptyPostId));
         }
 
         [Fact]
-        public void Add_IfTextEmpty_ShouldThrowPostValidationException()
+        public async Task Add_IfTextEmpty_ShouldThrowPostValidationException()
         {
             var commentsServiceTestWrapper = CreateCommentsServiceTestWrapper();
             var commentWithEmptyText = new Comment(Guid.NewGuid(), Guid.NewGuid(), String.Empty);
 
-            Assert.Throws<CommentValidationException>(() => 
-                commentsServiceTestWrapper.CommentsService.AddAsync(commentWithEmptyText).Wait());
+            await Assert.ThrowsAsync<CommentValidationException>(async () => 
+                await commentsServiceTestWrapper.CommentsService.AddAsync(commentWithEmptyText));
         }
 
         [Fact]
-        public void Add_IfTextContainsOnlySpaces_ShouldThrowPostValidationException()
+        public async Task Add_IfTextContainsOnlySpaces_ShouldThrowPostValidationException()
         {
             var commentsServiceTestWrapper = CreateCommentsServiceTestWrapper();
             var commentWithWhiteSpacesText = new Comment(Guid.NewGuid(), Guid.NewGuid(), "   ");
 
-            Assert.Throws<CommentValidationException>(() => 
-                commentsServiceTestWrapper.CommentsService.AddAsync(commentWithWhiteSpacesText).Wait());
+            await Assert.ThrowsAsync<CommentValidationException>(async () => 
+                await commentsServiceTestWrapper.CommentsService.AddAsync(commentWithWhiteSpacesText));
         }
 
         [Fact]
-        public void Add_IfCommentWasAlreadyAdded_ShouldThrowException()
+        public async Task  Add_IfCommentWasAlreadyAdded_ShouldThrowException()
         {
-            Add_IfModelWasAlreadyAdded_ShouldThrowException(CreateCommentsServiceTestWrapper().CommentsService);
+            await Add_IfModelWasAlreadyAdded_ShouldThrowException(CreateCommentsServiceTestWrapper().CommentsService);
         }
 
         [Fact]
-        public void Add_IfAddedTheSamePost_ShouldThrowException()
+        public async Task Add_IfAddedTheSamePost_ShouldThrowException()
         {
             var commentServiceTestWrapper = CreateCommentsServiceTestWrapper();
-            Add_IfAddedTheSameModel_ShouldThrowException(commentServiceTestWrapper.CommentsService,
+            await Add_IfAddedTheSameModel_ShouldThrowException(commentServiceTestWrapper.CommentsService,
                 GenerateCommentToBeAdded(commentServiceTestWrapper));
         }
 
         [Fact]
-        public void Delete_IfCommentWasNotAddedOrAlreadyDeleted_ShouldThrowException()
+        public async Task Delete_IfCommentWasNotAddedOrAlreadyDeleted_ShouldThrowException()
         {
-            Delete_IfModelWasNotAddedOrAlreadyDeleted_ShouldThrowException(
+            await Delete_IfModelWasNotAddedOrAlreadyDeleted_ShouldThrowException(
                 CreateCommentsServiceTestWrapper().CommentsService,
                 new Comment(Guid.NewGuid(), Guid.NewGuid(), "comment not added"));
         }
@@ -185,16 +185,16 @@ namespace TravixTest.Logic.Tests
                 .ReturnsAsync(() => commentsWereCreated);
 
             mockCommentRepository
-                .Setup(r => r.GetAsync(It.IsAny<Guid>()).SyncResult())
-                .Returns<Guid>(id => commentsWereCreated.SingleOrDefault(x => x.Id == id));
+                .Setup(r => r.GetAsync(It.IsAny<Guid>()))
+                .Returns((Guid id) => Task.FromResult(commentsWereCreated.SingleOrDefault(x => x.Id == id)));
 
             mockCommentRepository
-                .Setup(r => r.DeleteAsync(It.Is<Comment>(m => commentsWereCreated.All(x => x.Id != m.Id))));
-                //.Returns(false);
+                .Setup(r => r.DeleteAsync(It.Is<Comment>(m => commentsWereCreated.All(x => x.Id != m.Id))))
+                .Returns(() => Task.FromResult<object>(null));
 
             mockCommentRepository
                 .Setup(r => r.DeleteAsync(It.Is<Comment>(m => commentsWereCreated.Any(x => x.Id == m.Id))))
-                //.Returns(true)
+                .Returns(() => Task.FromResult<object>(null))
                 .Callback<Comment>(m =>
                 {
                     var commentToBeDeleted = commentsWereCreated.Single(x => x.Id == m.Id);
@@ -203,18 +203,18 @@ namespace TravixTest.Logic.Tests
 
             mockCommentRepository
                 .Setup(r => r.AddAsync(It.Is<Comment>(c =>
-                    postsWereCreated.All(p => p.Id != c.PostId) || commentsWereCreated.Any(x => x.Id == c.Id))));
-                //.Returns(false);
+                    postsWereCreated.All(p => p.Id != c.PostId) || commentsWereCreated.Any(x => x.Id == c.Id))))
+                .Returns(() => Task.FromResult<object>(null));
 
             mockCommentRepository
                 .Setup(r => r.AddAsync(It.Is<Comment>(c => 
                     postsWereCreated.Any(p => p.Id == c.PostId && commentsWereCreated.All(x => x.Id != c.Id)))))
-                //.Returns(true)
+                .Returns(() => Task.FromResult<object>(null))
                 .Callback<Comment>(c => commentsWereCreated.Add(c));
 
             mockCommentRepository
-                .Setup(r => r.GetAllByPostAsync(It.IsAny<Guid>()).SyncResult())
-                .Returns<Guid>(pid => commentsWereCreated.Where(x => x.PostId == pid));
+                .Setup(r => r.GetAllByPostAsync(It.IsAny<Guid>()))
+                .Returns((Guid pid) => Task.FromResult(commentsWereCreated.Where(x => x.PostId == pid)));
 
             var mockPostRepository = new Mock<IPostsRepository>();
             mockPostRepository.SetupGetModel(postsWereCreated);

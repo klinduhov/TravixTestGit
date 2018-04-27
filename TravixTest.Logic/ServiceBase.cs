@@ -31,14 +31,14 @@ namespace TravixTest.Logic
             return await repository.GetAllASync();
         }
 
-        protected async Task AddAsync(TModel model, Action<TModel> additionalValidationForAdding)
-        {
-            Validator.Validate(model);
+        //protected async Task AddAsync(TModel model, Action<TModel> additionalValidationForAdding)
+        //{
+        //    Validator.Validate(model);
 
-            additionalValidationForAdding?.Invoke(model);
+        //    additionalValidationForAdding?.Invoke(model);
 
-            await Task.Run(() => repository.AddAsync(model));
-        }
+        //    await Task.Run(() => repository.AddAsync(model));
+        //}
 
         public async Task DeleteAsync(Guid id)
         {

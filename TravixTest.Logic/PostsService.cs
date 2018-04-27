@@ -17,13 +17,14 @@ namespace TravixTest.Logic
 
         public async Task AddAsync(Post post)
         {
-            await AddAsync(post, async p =>
-            {
-                var postAlreadyAdded = await GetAsync(p.Id);
+            Validator.Validate(post);
 
-                if (postAlreadyAdded != null)
-                    throw new Exception("already added");
-            });
+            var postAlreadyAdded = await GetAsync(post.Id);
+
+            if (postAlreadyAdded != null)
+                throw new Exception("already added");
+
+            await repository.AddAsync(post);
         }
 
         public async Task UpdateAsync(Post post)

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Moq;
 using TravixTest.Logic.Contracts;
 using TravixTest.Logic.DomainModels;
@@ -44,60 +45,60 @@ namespace TravixTest.Logic.Tests
         }
 
         [Fact]
-        public void Add_IfIdEmpty_ShouldThrowPostValidationException()
+        public async Task Add_IfIdEmpty_ShouldThrowPostValidationException()
         {
-            WriteOperation_IfIdEmpty_ShouldThrowPostValidationException(WriteOperationTypes.Add);
+            await WriteOperation_IfIdEmpty_ShouldThrowPostValidationException(WriteOperationTypes.Add);
         }
 
         [Fact]
-        public void Add_IfBodyEmpty_ShouldThrowPostValidationException()
+        public async Task Add_IfBodyEmpty_ShouldThrowPostValidationException()
         {
-            WriteOperation_IfBodyEmpty_ShouldThrowPostValidationException(WriteOperationTypes.Add);
+            await WriteOperation_IfBodyEmpty_ShouldThrowPostValidationException(WriteOperationTypes.Add);
         }
 
         [Fact]
-        public void Add_IfBodyContainsOnlySpaces_ShouldThrowPostValidationException()
+        public async Task Add_IfBodyContainsOnlySpaces_ShouldThrowPostValidationException()
         {
-            WriteOperation_IfBodyContainsOnlySpaces_ShouldThrowPostValidationException(WriteOperationTypes.Add);
+            await WriteOperation_IfBodyContainsOnlySpaces_ShouldThrowPostValidationException(WriteOperationTypes.Add);
         }
 
         [Fact]
-        public void Add_IfPostWasAlreadyAdded_ShouldThrowException()
+        public async Task Add_IfPostWasAlreadyAdded_ShouldThrowException()
         {
-            Add_IfModelWasAlreadyAdded_ShouldThrowException(CreateTestingService());
+            await Add_IfModelWasAlreadyAdded_ShouldThrowException(CreateTestingService());
         }
 
         [Fact]
-        public void Add_IfAddedTheSamePost_ShouldThrowException()
+        public async Task Add_IfAddedTheSamePost_ShouldThrowException()
         {
-            Add_IfAddedTheSameModel_ShouldThrowException(CreateTestingService(), new Post(Guid.NewGuid(), "added post body"));
+            await Add_IfAddedTheSameModel_ShouldThrowException(CreateTestingService(), new Post(Guid.NewGuid(), "added post body"));
         }
 
         [Fact]
-        public void Update_IfIdEmpty_ShouldThrowPostValidationException()
+        public async Task Update_IfIdEmpty_ShouldThrowPostValidationException()
         {
-            WriteOperation_IfIdEmpty_ShouldThrowPostValidationException(WriteOperationTypes.Update);            
+            await WriteOperation_IfIdEmpty_ShouldThrowPostValidationException(WriteOperationTypes.Update);            
         }
 
         [Fact]
-        public void Update_IfBodyEmpty_ShouldThrowPostValidationException()
+        public async Task Update_IfBodyEmpty_ShouldThrowPostValidationException()
         {
-            WriteOperation_IfBodyEmpty_ShouldThrowPostValidationException(WriteOperationTypes.Update);
+            await WriteOperation_IfBodyEmpty_ShouldThrowPostValidationException(WriteOperationTypes.Update);
         }
 
         [Fact]
-        public void Update_IfBodyContainsOnlySpaces_ShouldThrowPostValidationException()
+        public async Task Update_IfBodyContainsOnlySpaces_ShouldThrowPostValidationException()
         {
-            WriteOperation_IfBodyContainsOnlySpaces_ShouldThrowPostValidationException(WriteOperationTypes.Update);
+            await WriteOperation_IfBodyContainsOnlySpaces_ShouldThrowPostValidationException(WriteOperationTypes.Update);
         }
 
         [Fact]
-        public void Update_IfPostWasNotAddedOrAlreadyDeleted_ShouldThrowException()
+        public async Task Update_IfPostWasNotAddedOrAlreadyDeleted_ShouldThrowException()
         {
             var service = CreateTestingService();
             var postNotExisting = new Post(Guid.NewGuid(), "not existing post body");
 
-            Assert.Throws<Exception>(() => service.UpdateAsync(postNotExisting).Wait());
+            await Assert.ThrowsAsync<Exception>(() => service.UpdateAsync(postNotExisting));
         }
 
         [Fact]
@@ -128,6 +129,8 @@ namespace TravixTest.Logic.Tests
 
         #endregion
 
+        #region Private methods        
+
         private static PostsService CreateTestingService()
         {
             var postsWereCreated = new List<Post>();
@@ -139,12 +142,13 @@ namespace TravixTest.Logic.Tests
             mockPostRepository.SetupGetModel(postsWereCreated);
 
             mockPostRepository
-                .Setup(r => r.DeleteAsync(It.Is<Post>(p => postsWereCreated.All(x => x.Id != p.Id))));
-                //.Returns(false);
+                .Setup(r => r.DeleteAsync(It.Is<Post>(p => postsWereCreated.All(x => x.Id != p.Id))))
+                .Returns(() => Task.FromResult<object>(null));
+            //.Returns(false);
 
             mockPostRepository
                 .Setup(r => r.DeleteAsync(It.Is<Post>(p => postsWereCreated.Any(x => x.Id == p.Id))))
-                //.Returns(true)
+                .Returns(() => Task.FromResult<object>(null))
                 .Callback<Post>(p =>
                 {
                     var postToBeDeleted = postsWereCreated.Single(x => x.Id == p.Id);
@@ -152,12 +156,13 @@ namespace TravixTest.Logic.Tests
                 });
 
             mockPostRepository
-                .Setup(r => r.UpdateAsync(It.Is<Post>(p => postsWereCreated.All(x => x.Id != p.Id))));
-                //.Returns(false);
+                .Setup(r => r.UpdateAsync(It.Is<Post>(p => postsWereCreated.All(x => x.Id != p.Id))))
+                .Returns(() => Task.FromResult<object>(null));
+            //.Returns(false);
 
             mockPostRepository
                 .Setup(r => r.UpdateAsync(It.Is<Post>(p => postsWereCreated.Any(x => x.Id == p.Id))))
-                //.Returns(true)
+                .Returns(() => Task.FromResult<object>(null))
                 .Callback<Post>(p =>
                 {
                     var postToBeUpdated = postsWereCreated.Single(x => x.Id == p.Id);
@@ -166,55 +171,68 @@ namespace TravixTest.Logic.Tests
                 });
 
             mockPostRepository
-                .Setup(r => r.AddAsync(It.Is<Post>(p => postsWereCreated.Any(x => x.Id == p.Id))));
-                //.Returns(false);
+                .Setup(r => r.AddAsync(It.Is<Post>(p => postsWereCreated.Any(x => x.Id == p.Id))))
+                .Returns(() => Task.FromResult<object>(null));
+            //.Returns(false);
 
             mockPostRepository
                 .Setup(r => r.AddAsync(It.Is<Post>(p => postsWereCreated.All(x => x.Id != p.Id))))
-                //.Returns(true)
-                .Callback<Post>(p => postsWereCreated.Add(p));
+                .Returns(() => Task.FromResult<object>(null))
+                .Callback<Post>(p =>
+                {
+                    postsWereCreated.Add(p);
+                });
 
             return new PostsService(mockPostRepository.Object);
         }
 
-        #region Private methods        
-
-        private void WriteOperation_IfIdEmpty_ShouldThrowPostValidationException(WriteOperationTypes operationType)
+        private async Task WriteOperation_IfIdEmpty_ShouldThrowPostValidationException(WriteOperationTypes operationType)
         {
             var service = CreateTestingService();
             var postWithEmptyBody = new Post(Guid.Empty, "write post body");
-            var action = GetWriteActionByType(operationType);
 
-            Assert.Throws<PostValidationException>(() => action(service, postWithEmptyBody));
+            switch (operationType)
+            {
+                case WriteOperationTypes.Add:
+                    await Assert.ThrowsAsync<PostValidationException>(async () => await service.AddAsync(postWithEmptyBody));
+                    break;
+                case WriteOperationTypes.Update:
+                    await Assert.ThrowsAsync<PostValidationException>(async () => await service.UpdateAsync(postWithEmptyBody));
+                    break;
+            }
         }
 
-        private void WriteOperation_IfBodyEmpty_ShouldThrowPostValidationException(WriteOperationTypes operationType)
+        private async Task WriteOperation_IfBodyEmpty_ShouldThrowPostValidationException(WriteOperationTypes operationType)
         {
             var service = CreateTestingService();
             var postWithEmptyBody = new Post(Guid.NewGuid(), string.Empty);
-            var action = GetWriteActionByType(operationType);
 
-            Assert.Throws<PostValidationException>(() => action(service, postWithEmptyBody));            
+            switch (operationType)
+            {
+                case WriteOperationTypes.Add:
+                    await Assert.ThrowsAsync<PostValidationException>(async () => await service.AddAsync(postWithEmptyBody));
+                    break;
+                case WriteOperationTypes.Update:
+                    await Assert.ThrowsAsync<PostValidationException>(async () => await service.UpdateAsync(postWithEmptyBody));
+                    break;
+            }
+            
         }
 
-        private void WriteOperation_IfBodyContainsOnlySpaces_ShouldThrowPostValidationException(WriteOperationTypes operationType)
+        private async Task WriteOperation_IfBodyContainsOnlySpaces_ShouldThrowPostValidationException(WriteOperationTypes operationType)
         {
             var service = CreateTestingService();
             var postWithWhiteSpacesBody = new Post(Guid.NewGuid(), "  ");
-            var action = GetWriteActionByType(operationType);
 
-            Assert.Throws<PostValidationException>(() => action(service, postWithWhiteSpacesBody));
-        }
-
-        private Action<PostsService, Post> GetWriteActionByType(WriteOperationTypes operationType)
-        {
-            var changeActionsDictionary = new Dictionary<WriteOperationTypes, Action<PostsService, Post>>
+            switch (operationType)
             {
-                {WriteOperationTypes.Add, (s, p) => s.AddAsync(p).Wait()},
-                {WriteOperationTypes.Update,(s, p) => s.UpdateAsync(p).Wait()}
-            };
-
-            return changeActionsDictionary[operationType];
+                case WriteOperationTypes.Add:
+                    await Assert.ThrowsAsync<PostValidationException>(async () => await service.AddAsync(postWithWhiteSpacesBody));
+                    break;
+                case WriteOperationTypes.Update:
+                    await Assert.ThrowsAsync<PostValidationException>(async () => await service.UpdateAsync(postWithWhiteSpacesBody));
+                    break;
+            }
         }
 
         #endregion
@@ -223,6 +241,6 @@ namespace TravixTest.Logic.Tests
         {
             Add,
             Update
-        }        
+        }
     }
 }

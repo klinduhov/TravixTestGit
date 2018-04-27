@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 using TravixTest.Logic.DomainModels;
 using Xunit;
 
@@ -9,7 +10,7 @@ namespace TravixTest.Logic.Tests
     {
         protected void GetAll_IfAddedModel_ShouldContainAddedOne(IService<T> service, T modelToBeAdded)
         {
-            service.AddAsync(modelToBeAdded);
+            service.AddAsync(modelToBeAdded).Wait();
 
             Assert.Contains(service.GetAllAsync().SyncResult(), m => m.Id == modelToBeAdded.Id);
         }
@@ -21,7 +22,7 @@ namespace TravixTest.Logic.Tests
 
         public void Get_IfAddedModel_ShouldReturnNotNullOne(IService<T> service, T modelToBeAdded)
         {
-            service.AddAsync(modelToBeAdded);
+            service.AddAsync(modelToBeAdded).Wait();
             var gotModel = service.GetAsync(modelToBeAdded.Id).SyncResult();
 
             Assert.NotNull(gotModel);
@@ -37,37 +38,38 @@ namespace TravixTest.Logic.Tests
 
         public void Get_IfAddedModel_ShouldReturnTheAddedOne(IService<T> service, T modelToBeAdded)
         {
-            service.AddAsync(modelToBeAdded);
+            service.AddAsync(modelToBeAdded).Wait();
             var gotModel = service.GetAsync(modelToBeAdded.Id).SyncResult();
 
             Assert.Equal(modelToBeAdded.Id, gotModel.Id);
         }
 
-        public void Add_IfModelWasAlreadyAdded_ShouldThrowException(IService<T> service)
+        public async Task Add_IfModelWasAlreadyAdded_ShouldThrowException(IService<T> service)
         {
+            //var posts = await service.GetAllAsync().SyncResult();
             var postAlreadyAdded = service.GetAllAsync().SyncResult().First();
 
-            Assert.Throws<Exception>(() => service.AddAsync(postAlreadyAdded).Wait());
+            await Assert.ThrowsAsync<Exception>(async () => await service.AddAsync(postAlreadyAdded));
         }
 
-        public void Add_IfAddedTheSameModel_ShouldThrowException(IService<T> service, T modelToBeAdded)
+        public async Task Add_IfAddedTheSameModel_ShouldThrowException(IService<T> service, T modelToBeAdded)
         {
-            service.AddAsync(modelToBeAdded);
+            await service.AddAsync(modelToBeAdded);
 
-            Assert.Throws<Exception>(() => service.AddAsync(modelToBeAdded).Wait());
+            await Assert.ThrowsAsync<Exception>(async () => await service.AddAsync(modelToBeAdded));
         }
 
-        public void Delete_IfModelWasNotAddedOrAlreadyDeleted_ShouldThrowException(IService<T> service, T modelNotExisting)
+        public async Task Delete_IfModelWasNotAddedOrAlreadyDeleted_ShouldThrowException(IService<T> service, T modelNotExisting)
         {
-            Assert.Throws<Exception>(() => service.DeleteAsync(modelNotExisting.Id).Wait());
+            await Assert.ThrowsAsync<Exception>(async () => await service.DeleteAsync(modelNotExisting.Id));
         }
 
         public void Delete_IfAddedModelDeleted_ShouldNotBeFoundByGetAndGetAll(IService<T> service, T modelToBeDeleted)
         {
-            service.AddAsync(modelToBeDeleted);
-            service.DeleteAsync(modelToBeDeleted.Id);
+            service.AddAsync(modelToBeDeleted).Wait();
+            service.DeleteAsync(modelToBeDeleted.Id).Wait();
 
-            Assert.Null(service.GetAsync(modelToBeDeleted.Id));
+            Assert.Null(service.GetAsync(modelToBeDeleted.Id).SyncResult());
             Assert.DoesNotContain(service.GetAllAsync().SyncResult(), p => p.Id == modelToBeDeleted.Id);
         }
     }

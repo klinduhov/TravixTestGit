@@ -20,8 +20,8 @@ namespace TravixTest.Logic.Tests
         public static void SetupGetModel(this Mock<IPostsRepository> mockRepository, IList<Post> modelsTestList)
         {
             mockRepository
-                .Setup(r => r.GetAsync(It.IsAny<Guid>()).SyncResult())
-                .Returns<Guid>(id => modelsTestList.SingleOrDefault(x => x.Id == id));
+                .Setup(r => r.GetAsync(It.IsAny<Guid>()))
+                .Returns((Guid id) => Task.FromResult(modelsTestList.SingleOrDefault(x => x.Id == id)));
         }
 
         public static T SyncResult<T>(this Task<T> task)

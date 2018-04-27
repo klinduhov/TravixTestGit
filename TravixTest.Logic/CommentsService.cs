@@ -26,18 +26,19 @@ namespace TravixTest.Logic
 
         public async Task AddAsync(Comment comment)
         {
-            await AddAsync(comment, async c =>
-             {
-                 var postAlreadyAdded = await postRepository.GetAsync(c.PostId);
+            Validator.Validate(comment);
 
-                 if (postAlreadyAdded == null)
-                     throw new Exception("post not found for adding comment");
+            var postAlreadyAdded = await postRepository.GetAsync(comment.PostId);
 
-                 var commentAlreadyAdded = await GetAsync(c.Id);
+            if (postAlreadyAdded == null)
+                throw new Exception("post not found for adding comment");
 
-                 if (commentAlreadyAdded != null)
-                     throw new Exception("already added");
-             });
+            var commentAlreadyAdded = await GetAsync(comment.Id);
+
+            if (commentAlreadyAdded != null)
+                throw new Exception("already added");
+
+            await repository.AddAsync(comment);
         }
     }
 }
