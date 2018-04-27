@@ -29,21 +29,28 @@ namespace TravixTest.WebApi.Controllers
             return service.GetAll();
         }
 
-        // GET: api/Comments/5
+        // GET: api/Comments/C80D232D-9BB1-4BCD-9C7C-470FFD73D8A7
         [HttpGet("{id}")]
         public Comment Get(Guid id)
         {
             return service.Get(id);
         }
-        
+
+        //// GET: api/Comments/C80D232D-9BB1-4BCD-9C7C-470FFD73D8A7
+        //[HttpGet("{postId}")]
+        //public IEnumerable<Comment> Get(Guid postId)
+        //{
+        //    return service.GetAllByPost(postId);
+        //}
+
         // POST: api/Comments
         [HttpPost]
         public void Post([FromBody]CommentInputModel commentInput)
         {
             service.Add(new Comment(Guid.NewGuid(), commentInput.PostId, commentInput.Text));
         }
-                
-        // DELETE: api/ApiWithActions/5
+
+        // DELETE: api/Comments/C80D232D-9BB1-4BCD-9C7C-470FFD73D8A7
         [HttpDelete("{id}")]
         public void Delete(Guid id)
         {

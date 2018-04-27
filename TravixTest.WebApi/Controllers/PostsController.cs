@@ -11,33 +11,42 @@ namespace TravixTest.WebApi.Controllers
     [Route("api/Posts")]
     public class PostsController : Controller
     {
-        private readonly IPostsService service;
+        private readonly IPostsService postsService;
+        private readonly ICommentsService commentsService;
 
         // GET: api/Posts
-        public PostsController(IPostsService service)
+        public PostsController(IPostsService postsService, ICommentsService commentsService)
         {
-            this.service = service;
+            this.postsService = postsService;
+            this.commentsService = commentsService;
         }
 
         [HttpGet]
         public IEnumerable<Post> Get()
         {
-            return service.GetAll();
+            return postsService.GetAll();
         }
 
         // GET: api/Posts/C80D232D-9BB1-4BCD-9C7C-470FFD73D8A7
         [HttpGet("{id}")]
         public Post Get(Guid id)
         {
-            return service.Get(id);
+            return postsService.Get(id);
         }
-        
+
+        [Route("{id}/comments")]
+        [HttpGet]
+        public IEnumerable<Comment> GetComments(Guid id)
+        {
+            return commentsService.GetAllByPost(id);
+        }
+
         // POST: api/Posts
         [HttpPost]
         public void Post([FromBody]PostInputModel postInput)
         {
             var post = new Post(Guid.NewGuid(), postInput.Body);
-            service.Add(post);
+            postsService.Add(post);
         }
 
         // PUT: api/Posts/C80D232D-9BB1-4BCD-9C7C-470FFD73D8A7
@@ -45,14 +54,14 @@ namespace TravixTest.WebApi.Controllers
         public void Put(Guid id, [FromBody]PostInputModel postModel)
         {
             var post = new Post(id, postModel.Body);
-            service.Update(post);
+            postsService.Update(post);
         }
 
         // DELETE: api/Posts/C80D232D-9BB1-4BCD-9C7C-470FFD73D8A7
         [HttpDelete("{id}")]
         public void Delete(Guid id)
         {
-            service.Delete(id);
+            postsService.Delete(id);
         }
     }
 }
