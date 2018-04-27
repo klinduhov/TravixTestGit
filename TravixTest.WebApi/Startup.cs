@@ -59,16 +59,20 @@ namespace TravixTest.WebApi
                 return new PostsService(postsRepository);
             });
 
+            services.AddLogging();
             services.AddMvc();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerfactory)
         {
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
             }
+
+            loggerfactory.AddConsole();
+            loggerfactory.AddDebug();
 
             app.UseMvc();
         }
