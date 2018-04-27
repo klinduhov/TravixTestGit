@@ -1,19 +1,30 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System;
+using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
 using TravixTest.DataAccess.Entities;
+using TravixTest.Logic.Contracts;
 using TravixTest.Logic.DomainModels;
 
 namespace TravixTest.DataAccess
 {
 
-    public class PostRepository : RepositoryBase<Post, PostEntity>
+    public class PostsRepository : RepositoryBase<Post, PostEntity>, IPostsRepository
     {
-        private readonly DbContextOptions<PostsCommentsContext> dbOptions;
-
-        protected PostRepository(DbContextOptions<PostsCommentsContext> dbOptions) : base(dbOptions)
+        public PostsRepository(DbContextOptions<PostsCommentsContext> dbOptions) : base(dbOptions)
         {
-            this.dbOptions = dbOptions;
+        }
+
+        public override Post Get(Guid id)
+        {
+            PostEntity result = null;
+
+            AtomicDbAction(db =>
+            {
+                result = db.Posts.Include(p => p.Comments).SingleOrDefault(en => en.Id == id);
+            });
+
+            return MapEntityToModel(result);
         }
 
         public override IEnumerable<Post> GetAll()
@@ -35,7 +46,7 @@ namespace TravixTest.DataAccess
 
         public void Update(Post model)
         {
-            AtomicDbAction(db =>
+            AtomicModify(db =>
             {
                 var entity = new PostEntity { Id = model.Id };
                 db.Set<PostEntity>().Attach(entity);

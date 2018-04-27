@@ -10,7 +10,6 @@ namespace TravixTest.DataAccess.Entities
         public Guid Id { get; set; }
         public Guid PostId { get; set; }
         public string Text { get; set; }
-        public bool IsRead { get; set; }
-        public PostEntity Post { get; set; }
+        //public PostEntity Post { get; set; }
     }
 }

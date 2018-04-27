@@ -9,14 +9,14 @@ namespace TravixTest.Logic.Tests
 {
     internal static class TestsHelper
     {
-        public static void SetupGetAllModels(this Mock<IPostRepository> mockRepository, IList<Post> modelsTestList)
+        public static void SetupGetAllModels(this Mock<IPostsRepository> mockRepository, IList<Post> modelsTestList)
         {
             mockRepository
                 .Setup(r => r.GetAll())
                 .Returns(() => modelsTestList);
         }
 
-        public static void SetupGetModel(this Mock<IPostRepository> mockRepository, IList<Post> modelsTestList)
+        public static void SetupGetModel(this Mock<IPostsRepository> mockRepository, IList<Post> modelsTestList)
         {
             mockRepository
                 .Setup(r => r.Get(It.IsAny<Guid>()))

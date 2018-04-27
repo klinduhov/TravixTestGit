@@ -6,12 +6,12 @@ using TravixTest.Logic.Validation;
 
 namespace TravixTest.Logic
 {
-    public class CommentsService : ServiceBase<Comment, CommentValidationException>, IService<Comment>
+    public class CommentsService : ServiceBase<Comment, CommentValidationException>, IService<Comment>, ICommentsService
     {
         private readonly ICommentsRepository repository;
         private readonly IRepository<Post> postRepository;
 
-        public CommentsService(ICommentsRepository repository, IPostRepository postRepository) :
+        public CommentsService(ICommentsRepository repository, IPostsRepository postRepository) :
             base(repository, new CommentValidator())
         {
             this.repository = repository;

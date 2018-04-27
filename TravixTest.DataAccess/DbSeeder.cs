@@ -26,7 +26,6 @@ namespace TravixTest.DataAccess
                     {
                         Id = Guid.NewGuid(),
                         PostId = postId,
-                        IsRead = false,
                         Text = $"comment {j} for post {i}"
                     }));
 

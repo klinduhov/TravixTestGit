@@ -5,11 +5,11 @@ using TravixTest.Logic.Validation;
 
 namespace TravixTest.Logic
 {
-    public class PostsService : ServiceBase<Post, PostValidationException>, IService<Post>
+    public class PostsService : ServiceBase<Post, PostValidationException>, IService<Post>, IPostsService
     {
-        private readonly IPostRepository repository;
+        private readonly IPostsRepository repository;
 
-        public PostsService(IPostRepository repository) : base(repository, new PostValidator())
+        public PostsService(IPostsRepository repository) : base(repository, new PostValidator())
         {
             this.repository = repository;
         }

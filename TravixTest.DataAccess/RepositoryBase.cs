@@ -1,7 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using TravixTest.DataAccess.Entities;
 using TravixTest.Logic.Contracts;
 using TravixTest.Logic.DomainModels;
@@ -24,40 +23,32 @@ namespace TravixTest.DataAccess
 
         protected void Delete(TModel model, Func<TModel, TEntity> withIdEntityConstructor)
         {
-            var entity = withIdEntityConstructor(model);
-            AtomicModify((db, e) => 
+            AtomicModify(db =>
             {
-                db.Attach(e);
-                db.Remove(e);
-            }, entity);
+                var entityForDelete = withIdEntityConstructor(model);
+                db.Attach(entityForDelete);
+                db.Remove(entityForDelete);
+            });
         }
 
         public abstract IEnumerable<TModel> GetAll();
         public abstract void Delete(TModel model);
+        public abstract TModel Get(Guid id);
 
         public void Add(TModel model)
         {
-            TEntity entity = MapModelToEntity(model);
-            AtomicModify((db, e) => db.Add(e), entity);
-        }
-
-        public TModel Get(Guid id)
-        {
-            TEntity result = null;
-            
-            AtomicDbAction(db =>
+            AtomicModify(db =>
             {
-                result = db.Set<TEntity>().SingleOrDefault(en => en.Id == id);
+                TEntity entity = MapModelToEntity(model);
+                db.Add(entity);
             });
-
-            return MapEntityToModel(result);
         }
 
-        protected void AtomicModify(Action<PostsCommentsContext, TEntity> dbUnitOfWorkSaveAction, TEntity entityForSave)
+        protected void AtomicModify(Action<PostsCommentsContext> dbUnitOfWorkSaveAction)
         {
             AtomicDbAction(db =>
             {
-                dbUnitOfWorkSaveAction(db, entityForSave);
+                dbUnitOfWorkSaveAction(db);
                 db.SaveChanges();
             });
         }

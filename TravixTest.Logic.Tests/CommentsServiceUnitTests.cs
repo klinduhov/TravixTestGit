@@ -211,7 +211,7 @@ namespace TravixTest.Logic.Tests
                 .Setup(r => r.GetAllByPost(It.IsAny<Guid>()))
                 .Returns<Guid>(pid => commentsWereCreated.Where(x => x.PostId == pid));
 
-            var mockPostRepository = new Mock<IPostRepository>();
+            var mockPostRepository = new Mock<IPostsRepository>();
             mockPostRepository.SetupGetModel(postsWereCreated);
             mockPostRepository.SetupGetAllModels(postsWereCreated);
 
@@ -220,13 +220,13 @@ namespace TravixTest.Logic.Tests
 
         private class CommentsServiceTestWrapper
         {            
-            private readonly IPostRepository postRepository;
+            private readonly IPostsRepository postRepository;
             private readonly Guid postWithNoCommentsId;
 
             public CommentsService CommentsService { get; }
 
             public CommentsServiceTestWrapper(Mock<ICommentsRepository> mockCommentRepository, 
-                Mock<IPostRepository> mockPostRepository, Guid postWithNoCommentsId)
+                Mock<IPostsRepository> mockPostRepository, Guid postWithNoCommentsId)
             {
                 this.postWithNoCommentsId = postWithNoCommentsId;
                 postRepository = mockPostRepository.Object;

@@ -133,7 +133,7 @@ namespace TravixTest.Logic.Tests
             var postsWereCreated = new List<Post>();
             postsWereCreated.AddRange(Enumerable.Range(0, 5).Select(i => new Post(Guid.NewGuid(), $"test body {i}")));
 
-            var mockPostRepository = new Mock<IPostRepository>();
+            var mockPostRepository = new Mock<IPostsRepository>();
 
             mockPostRepository.SetupGetAllModels(postsWereCreated);
             mockPostRepository.SetupGetModel(postsWereCreated);
