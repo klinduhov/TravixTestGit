@@ -7,41 +7,8 @@ using TravixTest.Logic.DomainModels;
 
 namespace TravixTest.DataAccess
 {
-    static class ModelsMapper
+    static class ModelsEntitesMapper
     {
-        //public static PostEntity Map(this Post model)
-        //public static IEntity MapToEntity<TModel>(this TModel model)
-        //    where TModel : IDomainModel
-        //{
-        //    var post = model as Post;
-
-        //    if (post != null)
-        //        return post.Map();
-
-        //    var comment = model as Comment;
-
-        //    if (comment != null)
-        //        return comment.Map();
-
-        //    throw new ArgumentOutOfRangeException();
-        //}
-
-        //public static TModel MapToModel<TEntity, TModel>(this TEntity entity)
-        //    where TEntity : IEntity
-        //{
-        //    var post = entity as PostEntity;
-
-        //    if (post != null)
-        //        return post.Map();
-
-        //    var comment = entity as CommentEntity;
-
-        //    if (comment != null)
-        //        return comment.Map();
-
-        //    throw new ArgumentOutOfRangeException();
-        //}
-
         public static PostEntity Map(this Post model)
         {
             return new PostEntity { Id = model.Id, Body = model.Body };

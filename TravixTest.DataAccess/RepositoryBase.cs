@@ -34,19 +34,12 @@ namespace TravixTest.DataAccess
 
         public abstract IEnumerable<TModel> GetAll();
         public abstract void Delete(TModel model);
-        //public abstract void Add(TModel model);
 
         public void Add(TModel model)
         {
             TEntity entity = MapModelToEntity(model);
             AtomicModify((db, e) => db.Add(e), entity);
         }
-
-        //public void Delete(TModel model)
-        //{
-        //    //AtomicModify()
-        //    throw new NotImplementedException();
-        //}
 
         public TModel Get(Guid id)
         {
@@ -59,35 +52,6 @@ namespace TravixTest.DataAccess
 
             return MapEntityToModel(result);
         }
-
-        //public IEnumerable<TModel> GetAll()
-        //{
-        //    var result = new List<TEntity>();
-
-        //    AtomicDbAction(db =>
-        //    {
-        //        result = db.Set<TEntity>().ToList();
-        //    });
-
-        //    return result.Select(MapEntityToModel);
-        //}
-
-        //public void Update(TModel model)
-        //{
-        //    throw new NotImplementedException();
-        //}
-
-        //private TEntity GetScalarSingleAtomic<TEntity>(Func<PostsCommentsContext, IQueryable<TEntity>> getQueryForScalarFunc) where TEntity : class
-        //{
-        //    TEntity result = null;
-
-        //    AtomicDbAction(db =>
-        //    {
-        //        result = getQueryForScalarFunc(db).Single();
-        //    });
-
-        //    return result;
-        //}
 
         protected void AtomicModify(Action<PostsCommentsContext, TEntity> dbUnitOfWorkSaveAction, TEntity entityForSave)
         {
