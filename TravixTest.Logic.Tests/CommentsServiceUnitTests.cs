@@ -184,12 +184,12 @@ namespace TravixTest.Logic.Tests
                 .Returns<Guid>(id => commentsWereCreated.SingleOrDefault(x => x.Id == id));
 
             mockCommentRepository
-                .Setup(r => r.Delete(It.Is<Comment>(m => commentsWereCreated.All(x => x.Id != m.Id))))
-                .Returns(false);
+                .Setup(r => r.Delete(It.Is<Comment>(m => commentsWereCreated.All(x => x.Id != m.Id))));
+                //.Returns(false);
 
             mockCommentRepository
                 .Setup(r => r.Delete(It.Is<Comment>(m => commentsWereCreated.Any(x => x.Id == m.Id))))
-                .Returns(true)
+                //.Returns(true)
                 .Callback<Comment>(m =>
                 {
                     var commentToBeDeleted = commentsWereCreated.Single(x => x.Id == m.Id);
@@ -197,14 +197,14 @@ namespace TravixTest.Logic.Tests
                 });
 
             mockCommentRepository
-                .Setup(r => r.Add(It.Is<Comment>(c => 
-                    postsWereCreated.All(p => p.Id != c.PostId) || commentsWereCreated.Any(x => x.Id == c.Id))))
-                .Returns(false);
+                .Setup(r => r.Add(It.Is<Comment>(c =>
+                    postsWereCreated.All(p => p.Id != c.PostId) || commentsWereCreated.Any(x => x.Id == c.Id))));
+                //.Returns(false);
 
             mockCommentRepository
                 .Setup(r => r.Add(It.Is<Comment>(c => 
                     postsWereCreated.Any(p => p.Id == c.PostId && commentsWereCreated.All(x => x.Id != c.Id)))))
-                .Returns(true)
+                //.Returns(true)
                 .Callback<Comment>(c => commentsWereCreated.Add(c));
 
             mockCommentRepository

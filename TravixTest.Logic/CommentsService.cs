@@ -23,9 +23,9 @@ namespace TravixTest.Logic
             return repository.GetAllByPost(postId);
         }
 
-        public bool Add(Comment comment)
+        public void Add(Comment comment)
         {
-            return Add(comment, c =>
+            Add(comment, c =>
             {
                 var postAlreadyAdded = postRepository.Get(c.PostId);
 

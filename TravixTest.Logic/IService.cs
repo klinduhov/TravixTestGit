@@ -6,9 +6,9 @@ namespace TravixTest.Logic
 {
     public interface IService<T> where T : IDomainModel
     {
-        bool Add(T post);
+        void Add(T post);
         T Get(Guid id);
         IEnumerable<T> GetAll();
-        bool Delete(Guid id);
+        void Delete(Guid id);
     }
 }

@@ -139,12 +139,12 @@ namespace TravixTest.Logic.Tests
             mockPostRepository.SetupGetModel(postsWereCreated);
 
             mockPostRepository
-                .Setup(r => r.Delete(It.Is<Post>(p => postsWereCreated.All(x => x.Id != p.Id))))
-                .Returns(false);
+                .Setup(r => r.Delete(It.Is<Post>(p => postsWereCreated.All(x => x.Id != p.Id))));
+                //.Returns(false);
 
             mockPostRepository
                 .Setup(r => r.Delete(It.Is<Post>(p => postsWereCreated.Any(x => x.Id == p.Id))))
-                .Returns(true)
+                //.Returns(true)
                 .Callback<Post>(p =>
                 {
                     var postToBeDeleted = postsWereCreated.Single(x => x.Id == p.Id);
@@ -152,12 +152,12 @@ namespace TravixTest.Logic.Tests
                 });
 
             mockPostRepository
-                .Setup(r => r.Update(It.Is<Post>(p => postsWereCreated.All(x => x.Id != p.Id))))
-                .Returns(false);
+                .Setup(r => r.Update(It.Is<Post>(p => postsWereCreated.All(x => x.Id != p.Id))));
+                //.Returns(false);
 
             mockPostRepository
                 .Setup(r => r.Update(It.Is<Post>(p => postsWereCreated.Any(x => x.Id == p.Id))))
-                .Returns(true)
+                //.Returns(true)
                 .Callback<Post>(p =>
                 {
                     var postToBeUpdated = postsWereCreated.Single(x => x.Id == p.Id);
@@ -166,12 +166,12 @@ namespace TravixTest.Logic.Tests
                 });
 
             mockPostRepository
-                .Setup(r => r.Add(It.Is<Post>(p => postsWereCreated.Any(x => x.Id == p.Id))))
-                .Returns(false);
+                .Setup(r => r.Add(It.Is<Post>(p => postsWereCreated.Any(x => x.Id == p.Id))));
+                //.Returns(false);
 
             mockPostRepository
                 .Setup(r => r.Add(It.Is<Post>(p => postsWereCreated.All(x => x.Id != p.Id))))
-                .Returns(true)
+                //.Returns(true)
                 .Callback<Post>(p => postsWereCreated.Add(p));
 
             return new PostsService(mockPostRepository.Object);

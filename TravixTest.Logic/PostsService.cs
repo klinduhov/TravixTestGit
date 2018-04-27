@@ -14,9 +14,9 @@ namespace TravixTest.Logic
             this.repository = repository;
         }
 
-        public bool Add(Post post)
+        public void Add(Post post)
         {
-            return Add(post, p =>
+            Add(post, p =>
             {
                 var postAlreadyAdded = Get(p.Id);
 
@@ -25,7 +25,7 @@ namespace TravixTest.Logic
             });
         }
 
-        public bool Update(Post post)
+        public void Update(Post post)
         {
             Validator.Validate(post);
 
@@ -34,7 +34,7 @@ namespace TravixTest.Logic
             if (oldPost == null)
                 throw new Exception("not found for update");
 
-            return repository.Update(post);
+            repository.Update(post);
         }
     }
 }

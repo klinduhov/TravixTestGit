@@ -30,38 +30,23 @@ namespace TravixTest.Logic
             return repository.GetAll();
         }
 
-        protected bool Add(TModel model, Action<TModel> additionalValidationForAdding)
+        protected void Add(TModel model, Action<TModel> additionalValidationForAdding)
         {
             Validator.Validate(model);
 
             additionalValidationForAdding?.Invoke(model);
 
-            return repository.Add(model);
+            repository.Add(model);
         }
 
-
-        //protected bool Update(TModel model, Action<TModel> additionalActionForAdding)
-        //{
-        //    Validator.Validate(model);
-
-        //    var oldModel = Get(model.Id);
-
-        //    if (oldModel == null)
-        //        throw new Exception("not found for update");
-
-        //    additionalActionForAdding?.Invoke(model);
-
-        //    return repository.Update(model);
-        //}
-
-        public bool Delete(Guid id)
+        public void Delete(Guid id)
         {
             var model = Get(id);
 
             if (model == null)
                 throw new Exception("not found for delete");
 
-            return repository.Delete(model);
+            repository.Delete(model);
         }
     }
 }
