@@ -4,7 +4,6 @@ using System.Linq;
 using Moq;
 using TravixTest.Logic.Contracts;
 using TravixTest.Logic.DomainModels;
-using TravixTest.Logic.Specifications;
 using TravixTest.Logic.Validation;
 using Xunit;
 
@@ -134,12 +133,37 @@ namespace TravixTest.Logic.Tests
             var postsWereCreated = new List<Post>();
             postsWereCreated.AddRange(Enumerable.Range(0, 5).Select(i => new Post(Guid.NewGuid(), $"test body {i}")));
 
-            var mockPostRepository = new Mock<IRepository<Post>>();
+            var mockPostRepository = new Mock<IPostRepository>();
 
             mockPostRepository.SetupGetAllModels(postsWereCreated);
             mockPostRepository.SetupGetModel(postsWereCreated);
-            mockPostRepository.SetupUpdateModel(postsWereCreated);
-            mockPostRepository.SetupDeleteModel(postsWereCreated);
+
+            mockPostRepository
+                .Setup(r => r.Delete(It.Is<Post>(p => postsWereCreated.All(x => x.Id != p.Id))))
+                .Returns(false);
+
+            mockPostRepository
+                .Setup(r => r.Delete(It.Is<Post>(p => postsWereCreated.Any(x => x.Id == p.Id))))
+                .Returns(true)
+                .Callback<Post>(p =>
+                {
+                    var postToBeDeleted = postsWereCreated.Single(x => x.Id == p.Id);
+                    postsWereCreated.Remove(postToBeDeleted);
+                });
+
+            mockPostRepository
+                .Setup(r => r.Update(It.Is<Post>(p => postsWereCreated.All(x => x.Id != p.Id))))
+                .Returns(false);
+
+            mockPostRepository
+                .Setup(r => r.Update(It.Is<Post>(p => postsWereCreated.Any(x => x.Id == p.Id))))
+                .Returns(true)
+                .Callback<Post>(p =>
+                {
+                    var postToBeUpdated = postsWereCreated.Single(x => x.Id == p.Id);
+                    int indexOfPostToBeUpdated = postsWereCreated.IndexOf(postToBeUpdated);
+                    postsWereCreated[indexOfPostToBeUpdated] = p;
+                });
 
             mockPostRepository
                 .Setup(r => r.Add(It.Is<Post>(p => postsWereCreated.Any(x => x.Id == p.Id))))

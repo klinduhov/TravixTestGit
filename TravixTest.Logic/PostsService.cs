@@ -7,8 +7,11 @@ namespace TravixTest.Logic
 {
     public class PostsService : ServiceBase<Post, PostValidationException>, IService<Post>
     {
-        public PostsService(IRepository<Post> repository) : base(repository, new PostValidator())
+        private readonly IPostRepository repository;
+
+        public PostsService(IPostRepository repository) : base(repository, new PostValidator())
         {
+            this.repository = repository;
         }
 
         public bool Add(Post post)
@@ -24,7 +27,14 @@ namespace TravixTest.Logic
 
         public bool Update(Post post)
         {
-            return Update(post, null);
+            Validator.Validate(post);
+
+            var oldPost = Get(post.Id);
+
+            if (oldPost == null)
+                throw new Exception("not found for update");
+
+            return repository.Update(post);
         }
     }
 }

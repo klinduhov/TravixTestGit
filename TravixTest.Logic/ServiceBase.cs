@@ -1,11 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Runtime.CompilerServices;
 using TravixTest.Logic.Contracts;
 using TravixTest.Logic.DomainModels;
-using TravixTest.Logic.DomainSpecifications;
-using TravixTest.Logic.Specifications;
 using TravixTest.Logic.Validation;
 
 namespace TravixTest.Logic
@@ -15,23 +11,23 @@ namespace TravixTest.Logic
         where TModel : IDomainModel
         where TException : Exception
     {
-        protected readonly IRepository<TModel> Repository;
+        private readonly IRepository<TModel> repository;
         protected readonly ModelValidatorBase<TModel, TException> Validator;
 
         protected ServiceBase(IRepository<TModel> repository, ModelValidatorBase<TModel, TException> validator)
         {
-            Repository = repository;
+            this.repository = repository;
             Validator = validator;
         }
 
         public TModel Get(Guid id)
         {
-            return Repository.Get(new Collection<DomainSpecificationBase> { new ByIdDomainSpecification(id) });
+            return repository.Get(id);
         }
 
         public IEnumerable<TModel> GetAll()
         {
-            return Repository.GetAll();
+            return repository.GetAll();
         }
 
         protected bool Add(TModel model, Action<TModel> additionalValidationForAdding)
@@ -40,23 +36,23 @@ namespace TravixTest.Logic
 
             additionalValidationForAdding?.Invoke(model);
 
-            return Repository.Add(model);
+            return repository.Add(model);
         }
 
 
-        protected bool Update(TModel model, Action<TModel> additionalActionForAdding)
-        {
-            Validator.Validate(model);
+        //protected bool Update(TModel model, Action<TModel> additionalActionForAdding)
+        //{
+        //    Validator.Validate(model);
 
-            var oldModel = Get(model.Id);
+        //    var oldModel = Get(model.Id);
 
-            if (oldModel == null)
-                throw new Exception("not found for update");
+        //    if (oldModel == null)
+        //        throw new Exception("not found for update");
 
-            additionalActionForAdding?.Invoke(model);
+        //    additionalActionForAdding?.Invoke(model);
 
-            return Repository.Update(model);
-        }
+        //    return repository.Update(model);
+        //}
 
         public bool Delete(Guid id)
         {
@@ -65,7 +61,7 @@ namespace TravixTest.Logic
             if (model == null)
                 throw new Exception("not found for delete");
 
-            return Repository.Delete(model);
+            return repository.Delete(model);
         }
     }
 }

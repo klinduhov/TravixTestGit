@@ -4,7 +4,6 @@ using System.Linq;
 using Moq;
 using TravixTest.Logic.Contracts;
 using TravixTest.Logic.DomainModels;
-using TravixTest.Logic.Specifications;
 using TravixTest.Logic.Validation;
 using Xunit;
 
@@ -76,42 +75,6 @@ namespace TravixTest.Logic.Tests
         }
 
         [Fact]
-        public void GetAllReadByPost_IfAddedToPostAndSetIsReadComment_ShouldContainAddedOne()
-        {
-            var commentsServiceTestWrapper = CreateCommentsServiceTestWrapper();
-            var firstPostFromTestSet = commentsServiceTestWrapper.GetFirstPostFromTestSet();
-            var commentToBeAdded = new Comment(Guid.NewGuid(), firstPostFromTestSet.Id, "comment to added and read");
-            commentsServiceTestWrapper.CommentsService.Add(commentToBeAdded);
-            commentsServiceTestWrapper.CommentsService.SetIsRead(commentToBeAdded);
-
-            Assert.Contains(commentsServiceTestWrapper.CommentsService.GetAllReadByPost(commentToBeAdded.PostId),
-                c => c.Id == commentToBeAdded.Id);
-        }
-
-        [Fact]
-        public void GetAllReadByPost_IfAddedToPostAndNotSetIsReadComment_ShouldReturnEmpty()
-        {
-            var commentsServiceTestWrapper = CreateCommentsServiceTestWrapper();
-            var firstPostFromTestSet = commentsServiceTestWrapper.GetFirstPostFromTestSet();
-            var commentToBeAdded = new Comment(Guid.NewGuid(), firstPostFromTestSet.Id, "comment to added and not read");
-            commentsServiceTestWrapper.CommentsService.Add(commentToBeAdded);
-
-            Assert.Empty(commentsServiceTestWrapper.CommentsService.GetAllReadByPost(commentToBeAdded.PostId));
-        }
-
-        [Fact]
-        public void SetIsRead_IfAddedToPostAndSetIsReadComment_GetShouldReturnCommentWithIsReadTrue()
-        {
-            var commentsServiceTestWrapper = CreateCommentsServiceTestWrapper();
-            var firstPostFromTestSet = commentsServiceTestWrapper.GetFirstPostFromTestSet();
-            var commentToBeAdded = new Comment(Guid.NewGuid(), firstPostFromTestSet.Id, "comment to added and read");
-            commentsServiceTestWrapper.CommentsService.Add(commentToBeAdded);
-            commentsServiceTestWrapper.CommentsService.SetIsRead(commentToBeAdded);
-
-            Assert.True(commentsServiceTestWrapper.CommentsService.Get(commentToBeAdded.Id).IsRead);
-        }
-
-        [Fact]
         public void Add_IfPostIdEmpty_ShouldThrowPostValidationException()
         {
             var commentsServiceTestWrapper = CreateCommentsServiceTestWrapper();
@@ -180,19 +143,6 @@ namespace TravixTest.Logic.Tests
             Assert.DoesNotContain(service.GetAllByPost(commentToBeDeleted.PostId), c => c.Id == commentToBeDeleted.Id);
         }
 
-        [Fact]
-        public void Delete_IfAddedIsReadCommentDeleted_ShouldNotBeFoundByGetAllReadByPost()
-        {
-            var commentServiceTestWrapper = CreateCommentsServiceTestWrapper();
-            var commentToBeDeleted = GenerateCommentToBeAdded(commentServiceTestWrapper);
-            var service = commentServiceTestWrapper.CommentsService;
-            service.Add(commentToBeDeleted);
-            service.SetIsRead(commentToBeDeleted);
-            service.Delete(commentToBeDeleted.Id);
-
-            Assert.DoesNotContain(service.GetAllReadByPost(commentToBeDeleted.PostId), c => c.Id == commentToBeDeleted.Id);
-        }
-
         #endregion
 
         #region Private methods
@@ -223,12 +173,28 @@ namespace TravixTest.Logic.Tests
             var postWithNoComments = new Post(Guid.NewGuid(), "with no comments test body");
             postsWereCreated.Add(postWithNoComments);
 
-            var mockCommentRepository = new Mock<IRepository<Comment>>();
+            var mockCommentRepository = new Mock<ICommentsRepository>();
 
-            mockCommentRepository.SetupGetAllModels(commentsWereCreated);
-            mockCommentRepository.SetupGetModel(commentsWereCreated);
-            mockCommentRepository.SetupUpdateModel(commentsWereCreated);
-            mockCommentRepository.SetupDeleteModel(commentsWereCreated);
+            mockCommentRepository
+                .Setup(r => r.GetAll())
+                .Returns(() => commentsWereCreated);
+
+            mockCommentRepository
+                .Setup(r => r.Get(It.IsAny<Guid>()))
+                .Returns<Guid>(id => commentsWereCreated.SingleOrDefault(x => x.Id == id));
+
+            mockCommentRepository
+                .Setup(r => r.Delete(It.Is<Comment>(m => commentsWereCreated.All(x => x.Id != m.Id))))
+                .Returns(false);
+
+            mockCommentRepository
+                .Setup(r => r.Delete(It.Is<Comment>(m => commentsWereCreated.Any(x => x.Id == m.Id))))
+                .Returns(true)
+                .Callback<Comment>(m =>
+                {
+                    var commentToBeDeleted = commentsWereCreated.Single(x => x.Id == m.Id);
+                    commentsWereCreated.Remove(commentToBeDeleted);
+                });
 
             mockCommentRepository
                 .Setup(r => r.Add(It.Is<Comment>(c => 
@@ -242,10 +208,10 @@ namespace TravixTest.Logic.Tests
                 .Callback<Comment>(c => commentsWereCreated.Add(c));
 
             mockCommentRepository
-                .Setup(r => r.GetAllFiltered(It.IsAny<ISpecification<Comment>>()))
-                .Returns<ISpecification<Comment>>(sp => commentsWereCreated.Where(sp.IsSatisifiedBy().Compile()));
+                .Setup(r => r.GetAllByPost(It.IsAny<Guid>()))
+                .Returns<Guid>(pid => commentsWereCreated.Where(x => x.PostId == pid));
 
-            var mockPostRepository = new Mock<IRepository<Post>>();
+            var mockPostRepository = new Mock<IPostRepository>();
             mockPostRepository.SetupGetModel(postsWereCreated);
             mockPostRepository.SetupGetAllModels(postsWereCreated);
 
@@ -254,13 +220,13 @@ namespace TravixTest.Logic.Tests
 
         private class CommentsServiceTestWrapper
         {            
-            private readonly IRepository<Post> postRepository;
+            private readonly IPostRepository postRepository;
             private readonly Guid postWithNoCommentsId;
 
             public CommentsService CommentsService { get; }
 
-            public CommentsServiceTestWrapper(Mock<IRepository<Comment>> mockCommentRepository, 
-                Mock<IRepository<Post>> mockPostRepository, Guid postWithNoCommentsId)
+            public CommentsServiceTestWrapper(Mock<ICommentsRepository> mockCommentRepository, 
+                Mock<IPostRepository> mockPostRepository, Guid postWithNoCommentsId)
             {
                 this.postWithNoCommentsId = postWithNoCommentsId;
                 postRepository = mockPostRepository.Object;
